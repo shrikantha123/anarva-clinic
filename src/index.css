@@ -16,6 +16,7 @@
 
 @media (max-width: 640px) {
   .quiz-step-shell {
+    justify-content: flex-start !important;
     gap: 8px;
     padding-top: 6px;
     padding-bottom: 6px;
@@ -82,6 +83,10 @@
 }
 
 @media (max-width: 360px) {
+  .quiz-step-card .grid button {
+    max-height: 96px;
+  }
+
   .quiz-step-card .treatment-options button {
     height: 48px !important;
     min-height: 48px;
