@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBackdrop = document.querySelector('.modal-backdrop');
     const modalPrev = document.querySelector('.modal-prev');
     const modalNext = document.querySelector('.modal-next');
+    const cleanCards = document.querySelectorAll('.result-card');
 
     let currentIndex = 0;
     const cardsArray = Array.from(cleanCards);
