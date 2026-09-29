@@ -297,7 +297,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
         </div>
 
         {/* Focused Work Card */}
-        <div className="bg-white border border-[#DDE5E8] rounded-2xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(11,18,21,0.04)] flex flex-col justify-between flex-1 min-h-0">
+        <div className="photo-step-card bg-white border border-[#DDE5E8] rounded-2xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(11,18,21,0.04)] flex flex-col justify-between flex-1 min-h-0">
           
           {/* Header Title */}
           <div className="text-center sm:text-left shrink-0 mb-1.5">
@@ -349,7 +349,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
           )}
 
           {/* Main Media Capture Frame */}
-          <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[340px] bg-[#0F172A] rounded-xl overflow-hidden flex items-center justify-center my-auto border border-[#CBD5E1]">
+          <div className="photo-step-media relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[340px] bg-[#0F172A] rounded-xl overflow-hidden flex items-center justify-center my-auto border border-[#CBD5E1]">
             
             {/* 1. Live Camera Mode */}
             {isCameraOpen ? (

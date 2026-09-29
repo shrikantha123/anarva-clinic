@@ -28,9 +28,10 @@
   }
 
   .quiz-step-card > div {
-    height: auto !important;
+    flex: 1 1 auto;
+    min-height: 0;
     gap: 10px !important;
-    justify-content: flex-start !important;
+    justify-content: space-between !important;
   }
 
   .quiz-step-card [class*="my-auto"] {
@@ -57,6 +58,40 @@
   .quiz-step-card .treatment-options,
   .quiz-step-card .treatment-duration-options {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .quiz-step-card > div > .grid {
+    flex: 1 1 auto;
+    align-content: center;
+  }
+
+  .photo-step-card {
+    justify-content: flex-start !important;
+    gap: 12px;
+  }
+
+  .photo-step-media {
+    flex: 1 1 auto;
+    min-height: 280px;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .quiz-step-card .treatment-options button {
+    height: 48px !important;
+    min-height: 48px;
+    padding: 6px 4px !important;
+  }
+
+  .quiz-step-card .treatment-duration-options button {
+    min-height: 44px;
+    padding: 4px 2px !important;
+    font-size: 10px;
+    line-height: 1.15;
   }
 }
 
