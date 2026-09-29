@@ -8,6 +8,58 @@
   }
 }
 
+/* Keep the assessment and admin surfaces sharp-edged and consistent. */
+#root,
+#root * {
+  border-radius: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .quiz-step-shell {
+    gap: 8px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .quiz-step-card {
+    justify-content: flex-start !important;
+    gap: 12px;
+    padding: 12px !important;
+  }
+
+  .quiz-step-card > div {
+    height: auto !important;
+    gap: 10px !important;
+    justify-content: flex-start !important;
+  }
+
+  .quiz-step-card [class*="my-auto"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .quiz-step-card h2 {
+    line-height: 1.2;
+  }
+
+  .quiz-step-card h2 + p {
+    margin-top: 4px !important;
+  }
+
+  .quiz-step-card .grid {
+    gap: 8px !important;
+  }
+
+  .quiz-step-card .grid-cols-1 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .quiz-step-card .treatment-options,
+  .quiz-step-card .treatment-duration-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
 @media print {
   header, aside, button, .no-print {
     display: none !important;

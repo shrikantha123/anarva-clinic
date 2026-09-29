@@ -242,10 +242,10 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
   const progressPercent = Math.round((currentQ / 8) * 100);
 
   return (
-    <div className="h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased overflow-hidden select-none">
+    <div className="quiz-step h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased overflow-hidden select-none">
       
       {/* Quiz Progress & Question Main Wrapper (Fills space nicely, zero scrolling) */}
-      <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0 overflow-y-auto sm:overflow-hidden">
+      <div className="quiz-step-shell w-full max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0 overflow-y-auto sm:overflow-hidden">
         
         {/* Top Progress Track */}
         <div className="flex flex-col gap-1 shrink-0 mb-1">
@@ -262,7 +262,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
         </div>
 
         {/* Question Card Container */}
-        <div className="bg-white border border-[#DDE5E8] rounded-2xl p-4 sm:p-6 shadow-[0_1px_4px_rgba(11,18,21,0.04)] flex flex-col justify-between flex-1 min-h-0 overflow-y-auto sm:overflow-hidden">
+        <div className="quiz-step-card bg-white border border-[#DDE5E8] rounded-2xl p-4 sm:p-6 shadow-[0_1px_4px_rgba(11,18,21,0.04)] flex flex-col justify-between flex-1 min-h-0 overflow-y-auto sm:overflow-hidden">
           
           {/* =========================================================
               QUESTION 1 — ONSET (UNIFORM HEIGHT & WIDTH TILES)
@@ -930,7 +930,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
               </div>
 
               {/* Uniform Equal Grid of 8 options */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-auto">
+              <div className="treatment-options grid grid-cols-2 sm:grid-cols-4 gap-2 my-auto">
                 {[
                   { id: 'minoxidil', label: 'Minoxidil' },
                   { id: 'finasteride', label: 'Finasteride' },
@@ -972,7 +972,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
               {hasQ8Treatments && (
                 <div className="p-2.5 bg-[#F8FAFC] border border-[#BBF7D0] rounded-xl flex flex-col gap-1.5">
                   <span className="text-xs font-bold text-[#0B1215]">How long have you used this treatment?</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  <div className="treatment-duration-options grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     {[
                       { id: '<3mo', label: 'Less than 3 mo' },
                       { id: '3-6mo', label: '3 – 6 mo' },
