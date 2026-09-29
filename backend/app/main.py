@@ -1,0 +1,119 @@
+import logging
+import time
+import uuid
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, Request
+from google import genai
+from starlette.exceptions import HTTPException
+from starlette.staticfiles import StaticFiles
+
+from app import db
+from app.ai.gemini import Gemini
+from app.api import analyze, appointments, doctor, patients
+from app.config import APP_BASE, DIST_DIR, SITE_DIR, get_settings
+from app.deps import get_db
+from app.errors import AppError, install_handlers
+from app.images import MAX_BYTES
+from app.logging_setup import event, request_id_var, setup_logging
+
+logger = logging.getLogger("app")
+MAX_BODY_BYTES = 3 * MAX_BYTES * 4 // 3 + 1024 * 1024  # three base64 photos plus JSON overhead
+STARTED = time.monotonic()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    setup_logging()
+    db.init_db(settings.database_path)
+    key = settings.gemini_api_key
+    app.state.ai = Gemini(
+        genai.Client(api_key=key.get_secret_value()), settings.gemini_model, settings.ai_timeout_seconds
+    ) if key else None
+    if app.state.ai is None:
+        event(logger, "GEMINI_API_KEY is not set: /api/analyze is disabled", logging.WARNING)
+    if settings.doctor_password is None:
+        event(logger, "DOCTOR_PASSWORD is not set: doctor login is disabled", logging.WARNING)
+    event(logger, "startup", environment=settings.environment)
+    yield
+    if app.state.ai:
+        await app.state.ai.aclose()
+    event(logger, "shutdown")
+
+
+class BodyLimit:
+    """Rejects oversized bodies (declared or streamed) before they are buffered."""
+
+    def __init__(self, app, max_bytes: int):
+        self.app, self.max_bytes = app, max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        declared = dict(scope["headers"]).get(b"content-length", b"0")
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            received += len(message.get("body", b"")) if message["type"] == "http.request" else 0
+            if received > self.max_bytes or (declared.isdigit() and int(declared) > self.max_bytes):
+                raise AppError(413, "The upload is too large. Please use smaller photos.")
+            return message
+
+        await self.app(scope, limited_receive, send)
+
+
+class StaticSPA(StaticFiles):
+    """Serves the built React app, falling back to index.html for client-side routes."""
+
+    async def get_response(self, path, scope):
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException as exc:
+            if exc.status_code != 404:
+                raise
+            return await super().get_response("index.html", scope)
+
+
+async def request_log(request: Request, call_next):
+    request_id = request_id_var.set(uuid.uuid4().hex[:12])
+    started, status = time.perf_counter(), 500
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        response.headers["X-Request-ID"] = request_id_var.get()
+        return response
+    finally:
+        event(logger, "request", method=request.method, path=request.url.path, status=status,
+              ms=int((time.perf_counter() - started) * 1000))
+        request_id_var.reset(request_id)
+
+
+def health(conn=Depends(get_db)):
+    conn.execute("SELECT 1")
+    return {"status": "healthy", "uptime": round(time.monotonic() - STARTED)}
+
+
+def create_app() -> FastAPI:
+    hidden = get_settings().production  # no interactive API docs in production
+    app = FastAPI(
+        title="Anarva Clinic API", lifespan=lifespan,
+        docs_url=None if hidden else "/docs", redoc_url=None, openapi_url=None if hidden else "/openapi.json",
+    )
+    app.middleware("http")(request_log)
+    app.add_middleware(BodyLimit, max_bytes=MAX_BODY_BYTES)
+    install_handlers(app)
+
+    for module in (analyze, patients, doctor, appointments):
+        app.include_router(module.router, prefix="/api")
+    app.add_api_route("/health", health, methods=["GET"])
+
+    if DIST_DIR.is_dir():
+        app.mount(APP_BASE, StaticSPA(directory=DIST_DIR, html=True), name="assessment")
+    app.mount("/", StaticFiles(directory=SITE_DIR, html=True), name="site")
+    return app
+
+
+app = create_app()

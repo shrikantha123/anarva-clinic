@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Anarva Clinic — AI Hair Loss Analysis</title>
+  <meta name="description" content="AI-powered scalp and follicular assessment by Anarva Clinic. Get instant insights about your hair and scalp using guided questions and scalp photographs.">
+  
+  <!-- Typography: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 1: HOMEPAGE (100% Identical to Reference Screenshot)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen active" id="screen-home" aria-label="Anarva Clinic AI Hair Loss Analysis">
+    <div class="home-bg-waves" aria-hidden="true"></div>
+
+    <div class="home-container">
+      
+      <!-- Top Brand Logo (High-Res Clean HD Logo) -->
+      <div class="home-logo-wrap">
+        <img src="anarva_logo_hd.png" alt="Anarva Clinic - Skin | Hair | Beauty" class="anarva-logo-img">
+      </div>
+
+      <!-- Hero Visual Composition -->
+      <div class="home-hero-visual">
+        <div class="hero-main-img-wrap">
+          <img src="hero_exact_faded.png" alt="AI Hair Loss Analysis Diagnostic" class="hero-main-img">
+        </div>
+      </div>
+
+      <!-- Centered Content Area -->
+      <div class="home-content-area">
+        <h1 class="home-title">
+          AI Hair Loss
+          <span class="highlight">Analysis</span>
+        </h1>
+
+        <div class="title-accent-line" aria-hidden="true"></div>
+
+        <p class="home-desc">
+          Get instant insights about your hair and scalp using guided questions and scalp photographs.
+        </p>
+
+        <button class="btn btn-primary home-cta" id="btn-home-start" onclick="startQuiz()">
+          Get Started &rarr;
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 2: QUESTIONNAIRE (Real Clinical Hair Photographs)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-quiz" aria-label="Hair Diagnostic Questionnaire">
+    <div class="quiz-layout">
+      
+      <!-- Quiz Header Bar -->
+      <div class="quiz-header">
+        <button class="icon-btn" onclick="prevQuestion()" aria-label="Previous Question">
+          &larr;
+        </button>
+        <div class="progress-track" aria-label="Quiz Progress">
+          <div class="progress-bar-fill" id="quiz-progress-bar"></div>
+        </div>
+        <div class="quiz-step-count" id="quiz-step-count">1 of 8</div>
+      </div>
+
+      <!-- Main Question Card -->
+      <div class="quiz-card">
+        <div class="quiz-category-tag" id="quiz-category">Category</div>
+        <h2 class="quiz-question-title" id="quiz-title">Question title</h2>
+        <p class="quiz-question-desc" id="quiz-desc">Question description</p>
+
+        <!-- Dynamic Question Options Container (Includes Real Photos) -->
+        <div id="quiz-options-container"></div>
+
+        <!-- Quiz Footer Navigation -->
+        <div class="quiz-footer">
+          <button class="btn btn-ghost" onclick="prevQuestion()">
+            &larr; Back
+          </button>
+          <button class="btn btn-primary" id="quiz-btn-next" onclick="nextQuestion()" disabled>
+            Continue &rarr;
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 3: PHOTO CAPTURE GUIDANCE
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-guide" aria-label="Photo Capture Instructions">
+    <div class="guide-layout">
+      
+      <div class="top-nav" style="padding-left:0;padding-right:0;">
+        <button class="icon-btn" onclick="showScreen('screen-quiz')">&larr;</button>
+        <div class="brand-mini">
+          <span>ANARVA CLINIC</span>
+        </div>
+        <div style="width:44px;"></div>
+      </div>
+
+      <div class="guide-card-main">
+        <div class="quiz-category-tag">Step 2 · Scalp Trichoscopy</div>
+        <h2 style="font-size:24px;margin-bottom:8px;color:var(--green-900);">Capture 3 High-Quality Scalp Photos</h2>
+        <p>Clear, well-lit photos allow our AI engine and dermatologists to accurately calculate follicular density and identify patterns.</p>
+
+        <div class="guide-tips-list">
+          <div class="guide-tip-item">
+            <div class="guide-tip-icon">1</div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:14.5px;">Bright, Even Daylight</div>
+              <div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">Face natural window light or a well-lit room. Avoid harsh shadows.</div>
+            </div>
+          </div>
+
+          <div class="guide-tip-item">
+            <div class="guide-tip-icon">2</div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:14.5px;">Follow On-Screen Guide Frame</div>
+              <div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">We will guide you through Frontal Hairline, Mid-Scalp, and Crown Vertex.</div>
+            </div>
+          </div>
+
+          <div class="guide-tip-item">
+            <div class="guide-tip-icon">3</div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:14.5px;">Hold Camera Steady</div>
+              <div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">Rest your elbow or have a companion take the photo for stability.</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="startCaptureFlow()">
+          Start Photo Scan &rarr;
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 4: PREMIUM CLINICAL STUDIO CAMERA (Refined, Non-Neon)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-capture" aria-label="Scalp Camera Capture">
+    <div class="capture-container">
+      
+      <!-- Top Navigation & Stage Badge -->
+      <div class="capture-top-bar">
+        <button class="btn-dark-ghost icon-btn" onclick="backFromCapture()">&larr;</button>
+        <div class="capture-stage-badge" id="cap-stage-badge">Stage 1 of 3: Frontal Hairline</div>
+        <button class="btn-dark-ghost icon-btn" onclick="startCameraStream()" title="Restart Camera">↻</button>
+      </div>
+
+      <!-- Main Camera Viewport & Refined HUD -->
+      <div class="camera-viewport-wrap">
+        <video id="cap-video" class="camera-video" autoplay playsinline muted></video>
+        <img id="cap-preview-img" class="camera-preview-img hidden" alt="Capture Preview">
+        
+        <!-- Refined Medical HUD Overlay -->
+        <div class="camera-hud-overlay">
+          <div class="camera-live-status-pill" id="cap-live-status">Align within guide · Hold steady</div>
+          
+          <div class="hud-guide-oval">
+            <div class="reticle-bracket rb-tl"></div>
+            <div class="reticle-bracket rb-tr"></div>
+            <div class="reticle-bracket rb-bl"></div>
+            <div class="reticle-bracket rb-br"></div>
+          </div>
+
+          <div class="camera-lighting-meter">
+            <div class="lighting-dot" id="cap-lighting-dot"></div>
+            <span id="cap-lighting-text">Lighting: Optimal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage Instruction Text -->
+      <div style="text-align:center;margin:12px 0;">
+        <div style="font-size:15px;font-weight:600;color:var(--text-mint);" id="cap-instruction">
+          Position your forehead and frontal hairline within the guide frame
+        </div>
+      </div>
+
+      <!-- Shutter & Upload Controls -->
+      <div class="capture-controls-bar">
+        <button class="capture-sub-btn" onclick="document.getElementById('file-upload-input').click()" title="Upload Image File">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+
+        <button class="shutter-btn" id="btn-shutter" onclick="captureShutterClick()" aria-label="Take Photo"></button>
+
+        <button class="capture-sub-btn" onclick="startCameraStream()" title="Realign Camera">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        </button>
+      </div>
+
+      <input type="file" id="file-upload-input" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+
+      <div class="capture-dots-indicator" id="cap-step-dots">
+        <div class="stage-dot active"></div>
+        <div class="stage-dot"></div>
+        <div class="stage-dot"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 5: IMAGE QUALITY VERIFICATION
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-quality" aria-label="Image Quality Verification">
+    <div class="guide-layout">
+      
+      <div class="quality-card">
+        <img id="quality-preview-img" class="quality-preview-thumb" src="guide_frontal.jpg" alt="Captured Scalp">
+        
+        <h2 id="quality-title" style="font-size:22px;color:var(--green-900);margin-bottom:6px;">Photo Quality Verified</h2>
+        <p id="quality-subtitle">Trichoscopy quality check passed. Scalp features and follicular density are clear.</p>
+
+        <div class="quality-checklist" id="quality-checklist">
+          <!-- Dynamic checklist items -->
+        </div>
+
+        <div style="display:flex;gap:12px;">
+          <button class="btn btn-ghost" style="flex:1;" onclick="retakeCurrentCapture()">
+            Retake
+          </button>
+          <button class="btn btn-primary" style="flex:1;" onclick="acceptQualityAndContinue()">
+            Continue &rarr;
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 6: REVIEW SCREEN (3 Scalp Photos)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-review" aria-label="Review Captured Photos">
+    <div class="review-layout">
+      
+      <div class="top-nav" style="padding-left:0;padding-right:0;">
+        <button class="icon-btn" onclick="showScreen('screen-guide')">&larr;</button>
+        <div class="brand-mini">
+          <span>ANARVA CLINIC</span>
+        </div>
+        <div style="width:44px;"></div>
+      </div>
+
+      <div class="quiz-category-tag">Step 3 · Verification</div>
+      <h2 style="font-size:26px;color:var(--green-900);margin-bottom:6px;">Review Your Scalp Photos</h2>
+      <p>All three diagnostic angles have been captured. You can retake any photo or proceed to AI analysis.</p>
+
+      <div class="review-photos-grid" id="review-photos-grid">
+        <!-- 3 Photos Rendered Dynamically -->
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-full" onclick="startAnalysisPipeline()">
+        Analyze My Hair &rarr;
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 7: PROCESSING PIPELINE (Premium Icons & Palette)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-proc" aria-label="AI Analysis Processing">
+    <div class="proc-card">
+      <div class="proc-radar-wrap">
+        <div class="proc-spinner-ring"></div>
+      </div>
+
+      <h2 class="proc-stage-title" id="proc-stage-title">Ingesting high-resolution scalp imagery...</h2>
+      <p style="color:var(--text-mint);font-size:14px;">Anarva AI Engine is analyzing follicle density & shedding factors.</p>
+
+      <div class="proc-steps-list" id="proc-steps-list">
+        <!-- Dynamic processing steps with clinical icons -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 8: PATIENT INTAKE (Unlocked Report Gate)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-details" aria-label="Patient Information Intake">
+    <div class="details-layout">
+      
+      <div class="details-card">
+        <div class="quiz-category-tag">Report Ready</div>
+        <h2 style="font-size:24px;color:var(--green-900);margin-bottom:6px;">Unlock Your Clinical Assessment</h2>
+        <p style="margin-bottom:24px;">Please provide your basic details so we can personalize your report and connect you with the right dermatologist.</p>
+
+        <form id="patient-form" onsubmit="submitPatientDetails(event)">
+          <div class="form-group" id="fg-name">
+            <label for="patient-name">Full Name *</label>
+            <input type="text" id="patient-name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+            <div class="field-error">Please enter your full name (minimum 2 characters).</div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group" id="fg-age">
+              <label for="patient-age">Age *</label>
+              <input type="number" id="patient-age" class="form-control" placeholder="e.g. 29" min="12" max="100" required>
+              <div class="field-error">Valid age between 12 and 100 required.</div>
+            </div>
+
+            <div class="form-group" id="fg-gender">
+              <label for="patient-gender">Gender *</label>
+              <select id="patient-gender" class="form-control" required>
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+              <div class="field-error">Please select your gender.</div>
+            </div>
+          </div>
+
+          <div class="form-group" id="fg-phone">
+            <label for="patient-phone">Phone Number *</label>
+            <input type="tel" id="patient-phone" class="form-control" placeholder="e.g. 9876543210" required>
+            <div class="field-error">Please enter a valid 10-digit mobile number.</div>
+          </div>
+
+          <div class="form-group" id="fg-city">
+            <label for="patient-city">City / Location *</label>
+            <input type="text" id="patient-city" class="form-control" placeholder="e.g. Bangalore, Karnataka" required>
+            <div class="field-error">Please provide your city.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:12px;">
+            Unlock My Full Report &rarr;
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 9: COMPREHENSIVE CLINICAL REPORT WITH BARS UI
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="screen-report" aria-label="AI Scalp Diagnostic Report">
+    <div class="report-container">
+      
+      <!-- Report Header Banner -->
+      <div class="report-header-banner">
+        <div class="rep-brand-col">
+          <div style="font-size:12px;letter-spacing:0.12em;color:var(--green-300);font-weight:700;text-transform:uppercase;">ANARVA CLINIC · AI TRICHOLOGY LAB</div>
+          <h1 class="rep-clinic-title">AI Hair &amp; Scalp Assessment Report</h1>
+          <div class="rep-sub-tag">Comprehensive Follicular Density &amp; Pattern Analysis</div>
+        </div>
+
+        <div class="rep-meta-badges">
+          <div class="rep-badge-pill" id="rep-report-id">ANR-2026-84920</div>
+          <div class="rep-badge-pill" id="rep-date">27 Sep 2026</div>
+          <div class="rep-badge-pill" id="rep-patient-meta">Patient Info</div>
+        </div>
+      </div>
+
+      <!-- Report Layout Grid (2 Columns on Desktop) -->
+      <div class="report-grid-layout">
+        
+        <!-- Left Column: Main Findings, Density Bars UI & Trichoscopy Photos -->
+        <div class="rep-main-col">
+          
+          <!-- Executive KPI Density Card with Multi-Bars UI -->
+          <div class="kpi-density-banner">
+            <div class="kpi-score-badge">
+              <div class="kpi-score-circle">
+                <div class="kpi-score-num" id="rep-kpi-overall">7.2</div>
+                <div class="kpi-score-denom">OUT OF 10</div>
+              </div>
+              <div class="kpi-details">
+                <div style="font-size:12px;font-weight:700;color:var(--green-700);text-transform:uppercase;letter-spacing:0.06em;">Overall Density Score</div>
+                <h3 id="rep-kpi-stage">Norwood Stage 2 · Mild Temporal Thinning</h3>
+                <p>AI-assisted trichoscopy indicates moderate follicular density across key scalp zones.</p>
+              </div>
+            </div>
+
+            <!-- Multi-Bar Density System -->
+            <div class="density-bars-grid">
+              <div class="density-bar-item">
+                <div class="density-bar-header">
+                  <span>Frontal Hairline Density</span>
+                  <strong id="rep-bar-front-val">6.8 / 10</strong>
+                </div>
+                <div class="density-bar-track">
+                  <div class="density-bar-fill" id="rep-bar-front-fill" style="width: 68%;"></div>
+                </div>
+              </div>
+
+              <div class="density-bar-item">
+                <div class="density-bar-header">
+                  <span>Mid-Scalp / Parting Density</span>
+                  <strong id="rep-bar-mid-val">7.4 / 10</strong>
+                </div>
+                <div class="density-bar-track">
+                  <div class="density-bar-fill" id="rep-bar-mid-fill" style="width: 74%;"></div>
+                </div>
+              </div>
+
+              <div class="density-bar-item">
+                <div class="density-bar-header">
+                  <span>Crown / Vertex Whorl Density</span>
+                  <strong id="rep-bar-crown-val">7.2 / 10</strong>
+                </div>
+                <div class="density-bar-track">
+                  <div class="density-bar-fill" id="rep-bar-crown-fill" style="width: 72%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 Scalp Trichoscopy Photos -->
+          <div class="rep-card">
+            <div class="rep-card-header">
+              <h3 class="rep-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Regional Scalp Trichoscopy
+              </h3>
+              <span style="font-size:12px;font-weight:700;color:var(--green-700);">3 Angles Captured</span>
+            </div>
+
+            <div class="rep-photo-row">
+              <div class="rep-photo-box">
+                <img id="rep-img-front" src="guide_frontal.jpg" alt="Frontal Scalp">
+                <div class="rep-photo-label">Frontal Hairline</div>
+                <div class="rep-photo-score" id="rep-score-front">Density: 6.8 / 10</div>
+              </div>
+
+              <div class="rep-photo-box">
+                <img id="rep-img-mid" src="guide_midscalp.jpg" alt="Mid Scalp">
+                <div class="rep-photo-label">Mid-Scalp / Top</div>
+                <div class="rep-photo-score" id="rep-score-mid">Density: 7.4 / 10</div>
+              </div>
+
+              <div class="rep-photo-box">
+                <img id="rep-img-crown" src="guide_crown.jpg" alt="Crown Vertex">
+                <div class="rep-photo-label">Crown Vertex</div>
+                <div class="rep-photo-score" id="rep-score-crown">Density: 7.2 / 10</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pattern Probabilities with Bars UI -->
+          <div class="rep-card">
+            <div class="rep-card-header">
+              <h3 class="rep-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Hair-Loss Pattern Probabilities
+              </h3>
+              <span style="font-size:12px;color:var(--text-muted);">AI Probabilistic Model</span>
+            </div>
+
+            <div class="prob-item">
+              <div class="prob-head">
+                <span>Androgenetic Alopecia (Pattern Thinning)</span>
+                <span id="rep-prob-andro">65%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill" id="rep-fill-andro" style="width: 65%;"></div>
+              </div>
+            </div>
+
+            <div class="prob-item">
+              <div class="prob-head">
+                <span>Telogen Effluvium (Diffuse / Stress Shedding)</span>
+                <span id="rep-prob-telo">25%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill" id="rep-fill-telo" style="width: 25%;"></div>
+              </div>
+            </div>
+
+            <div class="prob-item">
+              <div class="prob-head">
+                <span>Other Scalp / Nutritional Factors</span>
+                <span id="rep-prob-other">10%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill" id="rep-fill-other" style="width: 10%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clinical Observations -->
+          <div class="rep-card">
+            <div class="rep-card-header">
+              <h3 class="rep-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Key Clinical Observations
+              </h3>
+            </div>
+            <div class="rep-bullets" id="rep-observations-list">
+              <!-- Rendered Dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Scalp Matrix, Dermatologist Recommendation, Booking CTA -->
+        <div class="rep-sidebar-col">
+          
+          <!-- Dermatologist Consultation Action Box -->
+          <div class="derm-consult-card">
+            <span class="derm-urgency-tag" id="rep-derm-urgency">Recommended Consultation</span>
+            <h4>Dermatologist Recommendation</h4>
+            <p id="rep-derm-reason">
+              Your visible follicular density and shedding timeline suggest an in-person clinical review would establish an optimal targeted treatment plan.
+            </p>
+            <button class="btn btn-primary btn-full" onclick="openAppointmentModal()">
+              Book Consultation at Anarva &rarr;
+            </button>
+          </div>
+
+          <!-- Scalp Environment Matrix -->
+          <div class="rep-card">
+            <div class="rep-card-header">
+              <h3 class="rep-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Scalp Health Matrix
+              </h3>
+            </div>
+            <div class="scalp-matrix-list" id="rep-scalp-matrix">
+              <!-- Rendered Dynamically -->
+            </div>
+          </div>
+
+          <!-- Mistakes to Avoid & Action Plan -->
+          <div class="rep-card">
+            <div class="rep-card-header">
+              <h3 class="rep-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Mistakes to Avoid
+              </h3>
+            </div>
+            <div class="rep-bullets">
+              <div class="rep-bullet-item">
+                <div class="rep-bullet-dot"></div>
+                <div>Avoid unprescribed oral medications without clinical trichoscopic evaluation.</div>
+              </div>
+              <div class="rep-bullet-item">
+                <div class="rep-bullet-dot"></div>
+                <div>Avoid excessive traction, tight ponytails, or aggressive heat styling tools.</div>
+              </div>
+              <div class="rep-bullet-item">
+                <div class="rep-bullet-dot"></div>
+                <div>Do not aggressively scratch or use harsh unbuffered chemical peeling oils.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Share & Download Actions -->
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-secondary btn-full" onclick="downloadPdfReport()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download PDF Report
+            </button>
+            <button class="btn btn-ghost btn-full" onclick="shareAssessment()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share Assessment
+            </button>
+            <button class="btn btn-ghost btn-full" onclick="restartAssessment()">
+              Start New Assessment
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Medical Disclaimer -->
+      <div class="report-disclaimer">
+        <strong>Medical Disclaimer:</strong> This AI-assisted trichology assessment provides preliminary educational evaluation based on user photographs and self-reported clinical history. It is not a substitute for in-person dermoscopy, biopsy, or diagnosis by a licensed dermatologist.
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     APPOINTMENT BOOKING MODAL
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="appt-modal">
+  <div class="modal-card">
+    <div class="quiz-category-tag">Anarva Clinic Dermatology</div>
+    <h3 style="font-size:22px;color:var(--green-900);margin:8px 0 12px;">Schedule In-Person Consultation</h3>
+    <p style="margin-bottom:20px;font-size:14px;">Connect with an Anarva Clinic hair restoration specialist to review your AI trichoscopy scan and craft a personalized clinical treatment plan.</p>
+    
+    <div style="background:var(--bg-soft);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;text-align:left;font-size:13.5px;color:var(--text-primary);">
+      <div>📍 <strong>Anarva Clinic</strong> — Kundapura &amp; Udupi Branches</div>
+      <div style="margin-top:4px;">📞 +91 98450 12345 · contact@anarvaclinic.com</div>
+      <div style="margin-top:4px;">🩺 Complete Trichoscopy &amp; Follicular Unit Examination</div>
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="closeAppointmentModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="confirmAppointmentBooking()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Script -->
+<script src="app.js"></script>
+
+</body>
+</html>

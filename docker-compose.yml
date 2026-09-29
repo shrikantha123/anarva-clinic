@@ -1,0 +1,16 @@
+services:
+  anarva:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: production
+      DATABASE_PATH: /data/anarva.db
+    volumes:
+      - anarva_data:/data
+    restart: unless-stopped
+
+volumes:
+  anarva_data:

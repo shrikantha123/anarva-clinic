@@ -1,0 +1,6 @@
+{
+  "name": "Anarva Clinic — AI Hair Loss Analysis",
+  "description": "Clinical-grade AI hair loss diagnosis and trichology assessment by Anarva Clinic. Complete quiz, hair photo upload with live camera guidance, and personalized diagnostic report.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

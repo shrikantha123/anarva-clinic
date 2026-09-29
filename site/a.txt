@@ -1,0 +1,340 @@
+/* =========================
+   HERO SECTION
+========================= */
+
+.hero {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f0f8f8 0%, #ffffff 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero .container {
+    display: grid;
+    grid-template-columns: 1.12fr 0.88fr;
+    gap: 48px;
+    align-items: center;
+}
+
+
+/* =========================
+   HERO CONTENT
+========================= */
+
+.hero-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(0, 150, 136, 0.1);
+    color: var(--primary-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.hero-content h1 {
+    font-size: clamp(32px, 5.2vw, 52px);
+    font-weight: 700;
+    line-height: 1.22;
+    margin-bottom: 24px;
+    color: var(--text-dark);
+}
+
+.hero-content h1 span {
+    color: var(--primary-color);
+    display: inline-block;
+}
+
+.hero-content p {
+    color: var(--text-light);
+    font-size: clamp(16px, 2vw, 18.5px);
+    line-height: 1.65;
+    margin-bottom: 24px;
+    max-width: 520px;
+}
+
+
+/* =========================
+   HERO BUTTONS
+========================= */
+
+.hero-btns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 0;
+}
+
+.hero-btns .btn {
+    padding: 13px 26px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+}
+
+
+/* =========================
+   HERO IMAGE
+========================= */
+
+.hero-image {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    overflow: visible;
+}
+
+/*
+   IMPORTANT:
+   Do not use a fixed 340px height with object-fit: cover.
+   That was cropping the person.
+*/
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-height: 520px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    display: block;
+    margin: 0 auto;
+}
+
+
+/* =========================
+   SUPPORT CARD
+========================= */
+
+.support-card {
+    position: absolute;
+    bottom: -20px;
+    right: 20px;
+
+    background: var(--white);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-hover);
+
+    text-align: center;
+    z-index: 10;
+    min-width: 120px;
+}
+
+.support-card h4 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+
+/* =========================
+   HERO STATS
+========================= */
+
+.hero-stats {
+    display: flex;
+    gap: 30px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.stat-text h4 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1;
+}
+
+
+/* =========================
+   STATS BAR
+========================= */
+
+.stats-bar {
+    background-color: #111;
+    border-top: 1px solid #222;
+    border-bottom: 1px solid #222;
+    padding: 30px 0;
+    width: 100%;
+    margin-top: -2px;
+    position: relative;
+    z-index: 2;
+}
+
+.stats-bar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.stats-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 900px) {
+
+    .hero {
+        padding: 60px 0;
+    }
+
+    .hero .container {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+    .hero-content {
+        text-align: center;
+        align-items: center;
+    }
+
+    .hero-content p {
+        max-width: 650px;
+    }
+
+    .hero-btns {
+        justify-content: center;
+    }
+
+    .hero-image {
+        width: 90%;
+        max-width: 650px;
+        margin: 0 auto;
+    }
+
+    .hero-image img {
+        width: 100%;
+        height: auto;
+        max-height: 550px;
+        object-fit: contain;
+    }
+
+    .support-card {
+        right: 10px;
+        bottom: -20px;
+    }
+
+    .stats-bar-inner {
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+    .hero {
+        padding: 45px 0 60px;
+    }
+
+    .hero .container {
+        gap: 40px;
+    }
+
+    .hero-content h1 {
+        font-size: 34px;
+        line-height: 1.2;
+        margin-bottom: 18px;
+    }
+
+    .hero-content p {
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .hero-btns {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-btns .btn {
+        padding: 12px 20px;
+    }
+
+    .hero-image {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .hero-image img {
+        width: 100%;
+        height: auto;
+        max-height: none;
+        object-fit: contain;
+        border-radius: 16px;
+    }
+
+    .support-card {
+        right: 10px;
+        bottom: -15px;
+        padding: 14px;
+        min-width: 100px;
+    }
+
+    .support-card h4 {
+        font-size: 20px;
+    }
+
+    .hero-stats {
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .stats-bar {
+        padding: 25px 0;
+    }
+
+    .stats-bar-inner {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .stats-bar-item {
+        width: 100%;
+        justify-content: center;
+    }
+}
