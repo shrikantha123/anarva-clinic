@@ -23,7 +23,7 @@
   }
 
   .quiz-step-card {
-    flex: 0 1 auto !important;
+    flex: 1 1 auto !important;
     min-height: 0 !important;
     justify-content: flex-start !important;
     gap: 12px;
@@ -31,7 +31,7 @@
   }
 
   .quiz-step-card > div {
-    flex: 0 1 auto !important;
+    flex: 1 1 auto !important;
     gap: 10px !important;
     justify-content: flex-start !important;
   }
@@ -63,8 +63,9 @@
   }
 
   .quiz-step-card > div > .grid {
-    flex: 0 0 auto;
-    align-content: start;
+    flex: 1 1 auto;
+    grid-auto-rows: minmax(64px, 1fr);
+    align-content: stretch;
   }
 
   .photo-step-card {
