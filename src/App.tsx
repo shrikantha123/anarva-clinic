@@ -129,7 +129,7 @@ export default function App() {
   };
 
   if (currentStep === 'doctor') {
-    return <DoctorPortal onBackToApp={() => setCurrentStep(analysis ? 'report' : 'quiz')} />;
+    return <DoctorPortal />;
   }
 
   const renderActiveStep = () => {

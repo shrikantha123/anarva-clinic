@@ -31,11 +31,7 @@ import { AnarvaLogo } from './AnarvaLogo';
 import { ReportStep } from './ReportStep';
 import { sound } from '../utils/audio';
 
-interface DoctorPortalProps {
-  onBackToApp: () => void;
-}
-
-export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
+export const DoctorPortal: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -329,15 +325,6 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
             </button>
           </form>
 
-          <div className="pt-2 border-t border-white/10 text-center">
-            <button
-              type="button"
-              onClick={onBackToApp}
-              className="text-xs font-semibold text-white/60 hover:text-white transition-colors cursor-pointer"
-            >
-              ← Return to Patient Assessment App
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -369,14 +356,6 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
             title="Refresh Data"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            onClick={onBackToApp}
-            className="px-3 py-1.5 rounded-xl border border-white/20 hover:bg-white/10 text-xs font-bold text-white/90 transition-all cursor-pointer whitespace-nowrap"
-          >
-            Patient App
           </button>
 
           <button
