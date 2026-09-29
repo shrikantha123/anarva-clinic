@@ -44,12 +44,20 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
   // Sequential progression: Front -> Mid -> Crown
   const [currentStage, setCurrentStage] = useState<StepStage>('front');
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [confirmationStage, setConfirmationStage] = useState<StepStage | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const confirmationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showConfirmation = (stage: StepStage) => {
+    if (confirmationTimerRef.current) clearTimeout(confirmationTimerRef.current);
+    setConfirmationStage(stage);
+    confirmationTimerRef.current = setTimeout(() => setConfirmationStage(null), 1000);
+  };
 
   // If there was a validation rejection from AI, highlight the first invalid stage
   useEffect(() => {
@@ -75,6 +83,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
   useEffect(() => {
     return () => {
       stopCamera();
+      if (confirmationTimerRef.current) clearTimeout(confirmationTimerRef.current);
     };
   }, []);
 
@@ -133,14 +142,17 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
 
     if (currentStage === 'front') {
       setPhotos((prev) => ({ ...prev, front: dataUrl }));
+      showConfirmation('front');
       stopCamera();
-      if (!photos.mid) setCurrentStage('mid');
+      if (!photos.mid) setTimeout(() => setCurrentStage('mid'), 1000);
     } else if (currentStage === 'mid') {
       setPhotos((prev) => ({ ...prev, mid: dataUrl }));
+      showConfirmation('mid');
       stopCamera();
-      if (!photos.crown) setCurrentStage('crown');
+      if (!photos.crown) setTimeout(() => setCurrentStage('crown'), 1000);
     } else if (currentStage === 'crown') {
       setPhotos((prev) => ({ ...prev, crown: dataUrl }));
+      showConfirmation('crown');
       stopCamera();
     }
   };
@@ -155,12 +167,15 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
       const dataUrl = event.target?.result as string;
       if (currentStage === 'front') {
         setPhotos((prev) => ({ ...prev, front: dataUrl }));
-        if (!photos.mid) setCurrentStage('mid');
+        showConfirmation('front');
+        if (!photos.mid) setTimeout(() => setCurrentStage('mid'), 1000);
       } else if (currentStage === 'mid') {
         setPhotos((prev) => ({ ...prev, mid: dataUrl }));
-        if (!photos.crown) setCurrentStage('crown');
+        showConfirmation('mid');
+        if (!photos.crown) setTimeout(() => setCurrentStage('crown'), 1000);
       } else if (currentStage === 'crown') {
         setPhotos((prev) => ({ ...prev, crown: dataUrl }));
+        showConfirmation('crown');
       }
     };
     reader.readAsDataURL(file);
@@ -171,12 +186,15 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
     sound.playSelect();
     if (currentStage === 'front') {
       setPhotos((prev) => ({ ...prev, front: sampleFront }));
-      if (!photos.mid) setCurrentStage('mid');
+      showConfirmation('front');
+      if (!photos.mid) setTimeout(() => setCurrentStage('mid'), 1000);
     } else if (currentStage === 'mid') {
       setPhotos((prev) => ({ ...prev, mid: sampleMid }));
-      if (!photos.crown) setCurrentStage('crown');
+      showConfirmation('mid');
+      if (!photos.crown) setTimeout(() => setCurrentStage('crown'), 1000);
     } else if (currentStage === 'crown') {
       setPhotos((prev) => ({ ...prev, crown: sampleCrown }));
+      showConfirmation('crown');
     }
   };
 
@@ -396,6 +414,12 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E]" />
                   <span>{currentMeta.title} Ready</span>
                 </div>
+                {confirmationStage === currentStage && (
+                  <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-white/95 text-[#0B1215] text-xs font-semibold flex items-center gap-1.5 shadow-lg">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#B91C1C]" />
+                    <span>Photo uploaded</span>
+                  </div>
+                )}
 
                 {/* Retake and Next Angle Buttons */}
                 <div className="absolute bottom-2.5 right-2.5 flex items-center gap-2">
@@ -446,7 +470,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
                     className="w-full py-3 px-4 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:scale-95 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
                     <Camera className="w-4 h-4" />
-                    <span>Take Live Photo</span>
+                    <span>Camera</span>
                   </button>
 
                   <button

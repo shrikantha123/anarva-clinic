@@ -98,6 +98,20 @@ button {
   color: var(--white);
 }
 
+.btn-doctor-panel {
+  margin-top: 14px;
+  background: #B91C1C;
+  color: var(--white);
+  border: none;
+  font-size: 14px;
+  padding: 9px 16px;
+}
+
+.btn-doctor-panel:hover {
+  background: #991B1B;
+  color: var(--white);
+}
+
 .section-title {
   text-align: center;
   margin-bottom: 40px;

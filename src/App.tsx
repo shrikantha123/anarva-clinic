@@ -6,7 +6,6 @@ import { AnalysisStep } from './components/AnalysisStep';
 import { UserInfoStep } from './components/UserInfoStep';
 import { ReportStep } from './components/ReportStep';
 import { DoctorPortal } from './components/DoctorPortal';
-import { AppFooter } from './components/AppFooter';
 import {
   QuizAnswers,
   PhotoData,
@@ -18,7 +17,9 @@ import {
 type AppStep = 'quiz' | 'photos' | 'analysis' | 'info' | 'report' | 'doctor';
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState<AppStep>('quiz');
+  const [currentStep, setCurrentStep] = useState<AppStep>(() =>
+    new URLSearchParams(window.location.search).has('doctor') ? 'doctor' : 'quiz'
+  );
 
   // Quiz state
   const [answers, setAnswers] = useState<QuizAnswers>({
@@ -184,7 +185,6 @@ export default function App() {
         {renderActiveStep()}
       </main>
 
-      <AppFooter onOpenDoctorPortal={() => setCurrentStep('doctor')} />
     </div>
   );
 }

@@ -37,8 +37,8 @@ interface DoctorPortalProps {
 
 export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('doctor@anarvaclinic.com');
-  const [password, setPassword] = useState('anarva2026');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -216,7 +216,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
     return (
       <div className="min-h-screen bg-[#090D0F] text-white flex flex-col font-['Outfit'] antialiased">
         {/* Doctor Action Bar atop the Exact Report */}
-        <div className="bg-[#0B1215] border-b border-[#22C55E]/30 px-4 sm:px-8 py-3 sticky top-0 z-50 flex items-center justify-between shadow-lg">
+        <div className="bg-[#0B1215] border-b border-[#B91C1C]/40 px-4 sm:px-8 py-3 sticky top-0 z-50 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -226,7 +226,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
               <X className="w-4 h-4" />
               <span>Back to Admin Panel</span>
             </button>
-            <div className="hidden sm:flex items-center gap-2 bg-[#22C55E]/15 border border-[#22C55E]/40 px-3 py-1 rounded-full text-xs font-bold text-[#86EFAC]">
+            <div className="hidden sm:flex items-center gap-2 bg-[#B91C1C]/15 border border-[#B91C1C]/40 px-3 py-1 rounded-full text-xs font-bold text-[#FCA5A5]">
               <Eye className="w-3.5 h-3.5" />
               <span>Viewing Exact Patient Report: {viewingPatient.name}</span>
             </div>
@@ -238,7 +238,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
               value={viewingPatient.status}
               disabled={statusUpdating}
               onChange={(e) => handleStatusChange(viewingPatient.patient_id, e.target.value as PatientStatus)}
-              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-[#22C55E]/50 bg-[#121B1E] text-white outline-none cursor-pointer focus:border-[#22C55E]"
+              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-[#B91C1C]/50 bg-[#121B1E] text-white outline-none cursor-pointer focus:border-[#B91C1C]"
             >
               <option value="Pending Review">Pending Review</option>
               <option value="Reviewed">Reviewed</option>
@@ -268,10 +268,10 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#090D0F] flex flex-col items-center justify-center p-4 font-['Outfit'] antialiased text-white">
-        <div className="w-full max-w-md bg-[#121B1E] rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#22C55E]/30 flex flex-col gap-6">
+        <div className="w-full max-w-md bg-[#121B1E] rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#B91C1C]/30 flex flex-col gap-6">
           <div className="flex flex-col items-center text-center">
             <AnarvaLogo size="lg" />
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#22C55E]/15 border border-[#22C55E]/40 text-[#4ADE80] text-xs font-bold">
+            <div className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#B91C1C]/15 border border-[#B91C1C]/40 text-[#FCA5A5] text-xs font-bold">
               <Lock className="w-3.5 h-3.5" />
               <span>Doctor & Clinic Admin Portal</span>
             </div>
@@ -288,7 +288,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="doctor@anarvaclinic.com"
-                className="w-full p-3 rounded-xl border border-white/15 bg-[#090D0F] text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#22C55E] transition-all"
+                className="w-full p-3 rounded-xl border border-white/15 bg-[#090D0F] text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#B91C1C] transition-all"
               />
             </div>
 
@@ -299,7 +299,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-3 rounded-xl border border-white/15 bg-[#090D0F] text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#22C55E] transition-all"
+                className="w-full p-3 rounded-xl border border-white/15 bg-[#090D0F] text-xs sm:text-sm text-white placeholder:text-white/40 outline-none focus:border-[#B91C1C] transition-all"
               />
             </div>
 
@@ -313,7 +313,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-[#22C55E] hover:bg-[#16A34A] active:scale-[0.99] text-[#090D0F] font-extrabold text-sm shadow-lg shadow-[#22C55E]/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] active:scale-[0.99] text-white font-extrabold text-sm shadow-lg shadow-[#B91C1C]/20 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -349,10 +349,10 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
   return (
     <div className="min-h-screen bg-[#090D0F] text-white font-['Outfit'] flex flex-col antialiased">
       {/* Top Header */}
-      <header className="bg-[#0F171A] border-b border-[#22C55E]/25 px-4 sm:px-8 py-3 sticky top-0 z-40 flex items-center justify-between shadow-md">
+      <header className="bg-[#0F171A] border-b border-[#B91C1C]/30 px-4 sm:px-8 py-3 sticky top-0 z-40 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
           <AnarvaLogo size="sm" />
-          <div className="hidden xs:flex items-center gap-1.5 bg-[#22C55E]/15 border border-[#22C55E]/30 px-3 py-1 rounded-full text-xs font-bold text-[#4ADE80]">
+          <div className="hidden xs:flex items-center gap-1.5 bg-[#B91C1C]/15 border border-[#B91C1C]/30 px-3 py-1 rounded-full text-xs font-bold text-[#FCA5A5]">
             <Stethoscope className="w-3.5 h-3.5" />
             <span>Doctor Admin</span>
           </div>
@@ -404,7 +404,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
               }}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'patients'
-                  ? 'bg-[#22C55E] text-[#090D0F] shadow-md shadow-[#22C55E]/20'
+                  ? 'bg-[#B91C1C] text-white shadow-md shadow-[#B91C1C]/20'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -420,7 +420,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
               }}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'appointments'
-                  ? 'bg-[#22C55E] text-[#090D0F] shadow-md shadow-[#22C55E]/20'
+                  ? 'bg-[#B91C1C] text-white shadow-md shadow-[#B91C1C]/20'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -437,7 +437,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by name, phone..."
-              className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-white/15 bg-[#121B1E] text-white placeholder:text-white/40 outline-none focus:border-[#22C55E]"
+              className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-white/15 bg-[#121B1E] text-white placeholder:text-white/40 outline-none focus:border-[#B91C1C]"
             />
           </div>
         </div>
@@ -454,7 +454,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                   onClick={() => setFilterStatus(st)}
                   className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
                     filterStatus === st
-                      ? 'bg-[#22C55E] text-[#090D0F]'
+                      ? 'bg-[#B91C1C] text-white'
                       : 'bg-[#121B1E] text-white/70 hover:text-white border border-white/10'
                   }`}
                 >
@@ -473,12 +473,12 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                 {filteredPatients.map((pt) => (
                   <div
                     key={pt.patient_id}
-                    className="bg-[#121B1E] border border-white/10 hover:border-[#22C55E]/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3.5 transition-all shadow-md group"
+                    className="bg-[#121B1E] border border-white/10 hover:border-[#B91C1C]/50 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3.5 transition-all shadow-md group"
                   >
                     {/* Top Row: Name, ID, Gender Pill */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#4ADE80] font-extrabold text-sm flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-2xl bg-[#B91C1C]/15 border border-[#B91C1C]/30 text-[#FCA5A5] font-extrabold text-sm flex items-center justify-center shrink-0">
                           {pt.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -490,7 +490,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                       </div>
 
                       {/* GENDER BADGE (Replaced hair loss stage per prompt) */}
-                      <span className="inline-flex items-center gap-1 font-bold text-xs bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40 px-3 py-1 rounded-full shrink-0">
+                      <span className="inline-flex items-center gap-1 font-bold text-xs bg-[#B91C1C]/15 text-[#FCA5A5] border border-[#B91C1C]/40 px-3 py-1 rounded-full shrink-0">
                         {pt.gender || 'Male'}
                       </span>
                     </div>
@@ -498,11 +498,11 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                     {/* Middle Row: Phone & Location in Neat Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#090D0F] p-3 rounded-xl border border-white/5">
                       <div className="flex items-center gap-2 truncate">
-                        <Phone className="w-3.5 h-3.5 text-[#22C55E] shrink-0" />
+                        <Phone className="w-3.5 h-3.5 text-[#B91C1C] shrink-0" />
                         <span className="text-white/90 truncate font-medium">{pt.phone}</span>
                       </div>
                       <div className="flex items-center gap-2 truncate">
-                        <MapPin className="w-3.5 h-3.5 text-[#22C55E] shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-[#B91C1C] shrink-0" />
                         <span className="text-white/90 truncate font-medium">{pt.address}</span>
                       </div>
                     </div>
@@ -515,7 +515,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                           value={pt.status}
                           disabled={statusUpdating}
                           onChange={(e) => handleStatusChange(pt.patient_id, e.target.value as PatientStatus)}
-                          className="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-white/20 bg-[#090D0F] text-white outline-none cursor-pointer focus:border-[#22C55E] transition-all flex-1"
+                          className="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-white/20 bg-[#090D0F] text-white outline-none cursor-pointer focus:border-[#B91C1C] transition-all flex-1"
                         >
                           <option value="Pending Review">Pending Review</option>
                           <option value="Reviewed">Reviewed</option>
@@ -529,7 +529,7 @@ export const DoctorPortal: React.FC<DoctorPortalProps> = ({ onBackToApp }) => {
                       <button
                         type="button"
                         onClick={() => openPatientExactReport(pt)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#22C55E] hover:bg-[#16A34A] text-[#090D0F] font-extrabold text-xs shadow-md shadow-[#22C55E]/20 transition-all cursor-pointer shrink-0"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md shadow-[#B91C1C]/20 transition-all cursor-pointer shrink-0"
                       >
                         <Eye className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>View Report</span>

@@ -14,7 +14,6 @@ import {
   Check,
   Zap,
   Flame,
-  UserCheck
 } from 'lucide-react';
 import { QuizAnswers } from '../types';
 import { sound } from '../utils/audio';
@@ -26,6 +25,7 @@ import q3MidsImg from '../assets/images/q3_mid_scalp_1790578883640.jpg';
 import q3CrownImg from '../assets/images/q3_crown_thinning_1790578871838.jpg';
 import q3DiffuseImg from '../assets/images/q3_diffuse_thinning_1790578928292.jpg';
 import q3PatchyImg from '../assets/images/patchy_hair_loss_1790577865155.jpg';
+import healthyScalpImg from '../assets/images/healthy_scalp_normal_1790577886948.jpg';
 
 // Distinct Unique Clinical Images for Q7
 import q7DandruffImg from '../assets/images/scalp_dandruff_flaking_1790577831902.jpg';
@@ -610,12 +610,12 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
               {/* Uniform Equal Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-auto">
                 {[
-                  { id: 'father', label: 'Father', role: 'Immediate paternal' },
-                  { id: 'maternal-gf', label: 'Maternal grandfather', role: 'X-chromosome linked' },
-                  { id: 'other-relatives', label: 'Other relatives', role: 'Extended family' },
-                  { id: 'multiple', label: 'Multiple family members', role: 'Strong genetic marker' },
-                  { id: 'none', label: 'No known family history', role: 'No hereditary signs' },
-                  { id: 'unsure', label: 'Not sure', role: 'Unknown history' },
+                  { id: 'father', label: 'Father', role: 'Immediate paternal', img: q3FrontalsImg },
+                  { id: 'maternal-gf', label: 'Maternal grandfather', role: 'X-chromosome linked', img: q3CrownImg },
+                  { id: 'other-relatives', label: 'Other relatives', role: 'Extended family', img: q3DiffuseImg },
+                  { id: 'multiple', label: 'Multiple family members', role: 'Strong genetic marker', img: q3PatchyImg },
+                  { id: 'none', label: 'No known family history', role: 'No hereditary signs', img: healthyScalpImg },
+                  { id: 'unsure', label: 'Not sure', role: 'Unknown history', img: q3MidsImg },
                 ].map((item) => {
                   const isSelected = answers.q5_family.includes(item.id);
                   return (
@@ -630,12 +630,8 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#F1F5F9] text-[#64748B]'
-                          }`}
-                        >
-                          <UserCheck className="w-4 h-4" />
+                        <div className="w-12 h-10 rounded-lg overflow-hidden shrink-0 bg-[#0F172A]">
+                          <img src={item.img} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className={`text-xs sm:text-sm font-bold truncate ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
@@ -951,10 +947,10 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       key={item.id}
                       type="button"
                       onClick={() => toggleQ8Treatment(item.id)}
-                      className={`h-16 sm:h-20 p-3 rounded-xl border text-center transition-all flex items-center justify-between gap-1.5 cursor-pointer ${
+                      className={`h-16 sm:h-20 p-3 rounded-full text-center transition-all flex items-center justify-between gap-1.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
-                          : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
+                          ? 'bg-[#B91C1C] text-white shadow-xs'
+                          : 'bg-[#F8FAFC] text-[#475569] hover:bg-[#F1F5F9]'
                       }`}
                     >
                       <span className={`text-xs sm:text-sm font-bold truncate ${isSelected ? 'text-[#0B1215]' : 'text-[#475569]'}`}>
@@ -962,7 +958,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       </span>
                       <div
                         className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-[#16A34A] border-[#16A34A] text-white' : 'border-[#CBD5E1] bg-white'
+                          isSelected ? 'bg-white/20 text-white' : 'bg-white text-[#94A3B8]'
                         }`}
                       >
                         {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -1036,7 +1032,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
           <button
             type="button"
             onClick={handleNext}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
           >
             <span>{currentQ === 8 ? 'Proceed to Hair Photos' : 'Continue'}</span>
             <ChevronRight className="w-4 h-4 stroke-[2.5]" />

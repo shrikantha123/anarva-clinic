@@ -132,11 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================================================
-    // Clean Image Gallery Lightbox (No Text / Labels Mode)
-    // ==========================================================================
-    const cleanCards = document.querySelectorAll('.clean-card, .result-card');
-    const resultModal = document.getElementById('resultModal');
+    // ===========================================================================
+    // Appointment Database Submission Handler
+    // ===========================================================================
     const modalImg = document.getElementById('modalImg');
     const modalClose = document.querySelector('.modal-close');
     const modalBackdrop = document.querySelector('.modal-backdrop');
@@ -317,29 +315,31 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                // Construct WhatsApp message
-                const phoneForWhatsapp = "919902430424";
-                const message = `*New Appointment Request* 🗓️\n\n` +
-                                `*Name:* ${formData.fullName}\n` +
-                                `*Email:* ${formData.email}\n` +
-                                `*Phone:* ${formData.phone}\n` +
-                                `*Consultation Type:* ${formData.consultationType}\n` +
-                                `*Preferred Date:* ${formData.preferredDate}\n` +
-                                `*Preferred Time:* ${formData.preferredTime}\n` +
-                                `*Concern:* ${formData.concern}`;
-                
-                const whatsappUrl = `https://wa.me/${phoneForWhatsapp}?text=${encodeURIComponent(message)}`;
-                
-                // Open WhatsApp in new tab
-                window.open(whatsappUrl, '_blank');
+                const response = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient_name: formData.fullName,
+                        patient_phone: formData.phone,
+                        specialist: 'Dr. Ajith Kumar',
+                        date: formData.preferredDate,
+                        time_slot: formData.preferredTime,
+                        type: formData.consultationType,
+                        notes: `Email: ${formData.email}\nConcern: ${formData.concern}`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Appointment request failed with status ${response.status}`);
+                }
 
                 formStatus.className = 'form-status-msg success';
-                formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Redirecting to WhatsApp...';
+                formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Appointment request saved. The clinic team will confirm your slot.';
                 bookingForm.reset();
             } catch (err) {
                 console.error('Submission Error:', err);
                 formStatus.className = 'form-status-msg error';
-                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error saving appointment. Please try again or contact us directly on WhatsApp.';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Could not save the appointment. Please try again or call the clinic.';
             } finally {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
