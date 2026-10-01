@@ -1,25 +1,23 @@
 """FastAPI dependencies."""
-import sqlite3
 from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import Depends, Request
 
-from app import db
 from app.ai.gemini import Gemini
 from app.config import Settings, get_settings
 from app.errors import AIError, AppError
 from app.services import auth
+from app.storage import RecordStore, SupabaseStore
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-def get_db(settings: SettingsDep) -> Iterator[sqlite3.Connection]:
-    conn = db.connect(settings.database_path)
-    try:
-        yield conn
-    finally:
-        conn.close()
+def get_db(request: Request) -> Iterator[RecordStore]:
+    store = getattr(request.app.state, "db", None)
+    if store is None:
+        raise AppError(503, "Supabase storage is not configured")
+    yield store
 
 
 def get_ai(request: Request) -> Gemini:
@@ -34,6 +32,6 @@ def require_doctor(request: Request, settings: SettingsDep) -> None:
         raise AppError(401, "Doctor login required")
 
 
-DB = Annotated[sqlite3.Connection, Depends(get_db)]
+DB = Annotated[RecordStore, Depends(get_db)]
 AI = Annotated[Gemini, Depends(get_ai)]
 DoctorOnly = Depends(require_doctor)

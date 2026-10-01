@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS {APPOINTMENTS} (
     patient_phone TEXT NOT NULL, specialist TEXT NOT NULL, date TEXT NOT NULL, time_slot TEXT NOT NULL,
     type TEXT NOT NULL, notes TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS patient_assessments_created_at_idx
+    ON {PATIENTS} (created_at DESC);
+CREATE INDEX IF NOT EXISTS appointments_created_at_idx
+    ON {APPOINTMENTS} (created_at DESC);
 """
 
 
@@ -64,3 +68,30 @@ def set_status(conn: sqlite3.Connection, table: str, status: str, where: str, pa
     with conn:
         cursor = conn.execute(f"UPDATE {table} SET status = ? WHERE {where}", (status, *params))
     return cursor.rowcount > 0
+
+
+class SQLiteStore:
+    """SQLite adapter used only by isolated backend tests."""
+
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+
+    def health_check(self) -> None:
+        self._conn.execute("SELECT 1")
+
+    def find(self, table: str, column: str, value: str) -> dict | None:
+        return find(self._conn, table, column, value)
+
+    def insert(self, table: str, record: dict) -> None:
+        insert(self._conn, table, record)
+
+    def list_all(self, table: str) -> list[dict]:
+        return list_all(self._conn, table)
+
+    def set_status(self, table: str, status: str, column: str, value: str) -> bool:
+        if column not in {"patient_id", "id", "appointment_id"}:
+            raise ValueError("Unknown record filter")
+        return set_status(self._conn, table, status, f"{column} = ?", (value,))
+
+    def close(self) -> None:
+        self._conn.close()

@@ -56,11 +56,48 @@ export default function App() {
 
   // AI analysis result — only ever set from the backend response
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Assessment unique ID
   const [assessmentId, setAssessmentId] = useState<string>(
     () => `ANR-${Math.floor(1000 + Math.random() * 9000)}-26`
   );
+
+  const savePatientAssessment = async (
+    info: UserInfo,
+    currentPhotos: PhotoData,
+    currentAnswers: QuizAnswers,
+    currentAnalysis: AnalysisResult,
+  ) => {
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: assessmentId,
+          name: info.name,
+          phone: info.phone,
+          gender: info.gender,
+          address: info.address,
+          quiz_answers: currentAnswers,
+          photo_urls: {
+            front: currentPhotos.front,
+            mid: currentPhotos.mid,
+            crown: currentPhotos.crown,
+          },
+          analysis: currentAnalysis,
+        }),
+      });
+      if (!response.ok) throw new Error('assessment_save_failed');
+    } catch {
+      setSaveError('Your report is ready, but we could not save it to clinic records. Please retry the save.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Transitions
   const handleQuizComplete = (completedAnswers: QuizAnswers) => {
@@ -92,32 +129,15 @@ export default function App() {
   };
 
   const handleUserInfoComplete = (info: UserInfo) => {
+    if (!analysis) return;
     setUserInfo(info);
     setAnalysis((prev) => (prev ? { ...prev, assessmentId } : prev));
+    setSaveError(null);
     // 1. Immediately display patient report
     setCurrentStep('report');
 
     // 2. Save assessment to Supabase in background (does not block patient view)
-    fetch('/api/patients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        patient_id: assessmentId,
-        name: info.name,
-        phone: info.phone,
-        gender: info.gender,
-        address: info.address,
-        quiz_answers: answers,
-        photo_urls: {
-          front: photos.front,
-          mid: photos.mid,
-          crown: photos.crown,
-        },
-        analysis,
-      }),
-    }).catch((err) => {
-      console.warn('Background assessment save notice:', err);
-    });
+    void savePatientAssessment(info, photos, answers, analysis);
   };
 
   const handleRestart = () => {
@@ -125,6 +145,7 @@ export default function App() {
     setValidationResult(null);
     setPhotos({ front: null, mid: null, crown: null });
     setAnalysis(null);
+    setSaveError(null);
     setCurrentStep('quiz');
   };
 
@@ -168,6 +189,11 @@ export default function App() {
             userInfo={userInfo}
             photos={photos}
             analysis={analysis}
+            saveError={saveError}
+            isSaving={isSaving}
+            onRetrySave={() => {
+              if (analysis) void savePatientAssessment(userInfo, photos, answers, analysis);
+            }}
             onRestart={handleRestart}
           />
         ) : null;

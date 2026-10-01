@@ -40,6 +40,7 @@ def _text(min_length: int) -> AfterValidator:
 
 
 Pct = Annotated[int, _number(0, 100)]
+ReasonPct = Annotated[int, _number(5, 100)]
 Stage = Annotated[int, _number(1, 7)]
 Density = Annotated[float, _number(0, 10, 1)]
 Text = Annotated[str, _text(1)]
@@ -77,12 +78,21 @@ class ImageValidation(BaseModel):
 
 class HairLossReason(BaseModel):
     reason: Text
-    percentage: Pct
+    percentage: ReasonPct
     explanation: Note
 
 
 class ScalpFinding(BaseModel):
-    condition: Text
+    condition: Literal[
+        "flaking",
+        "seborrhoeic changes",
+        "erythema",
+        "folliculitis",
+        "miniaturisation",
+        "scarring signs",
+        "patchy loss",
+        "other visible sign",
+    ]
     severity_pct: Pct
     observation: Note
 
@@ -127,11 +137,11 @@ class Analysis(BaseModel):
     flaking_level: Pct
     redness_index: Pct
     scalp_irritation_index: Pct
-    hair_loss_reasons: list[HairLossReason]
+    hair_loss_reasons: list[HairLossReason] = Field(min_length=1, max_length=5)
     scalp_findings: list[ScalpFinding]
-    clinical_observations: list[Note]
+    clinical_observations: list[Note] = Field(min_length=1, max_length=6)
     consultation: Consultation
-    next_steps: list[NextStep]
+    next_steps: list[NextStep] = Field(min_length=3, max_length=4)
     doctor_treatments: DoctorTreatments
     doctor_clinical_brief: Note
     overall_confidence_pct: Pct
@@ -140,21 +150,27 @@ class Analysis(BaseModel):
     @field_validator("hair_loss_reasons")
     @classmethod
     def _total_exactly_100(cls, reasons):
+        if not 1 <= len(reasons) <= 5:
+            raise ValueError("hair_loss_reasons must contain between 1 and 5 items")
         total = sum(r.percentage for r in reasons)
         if total <= 0:
             raise ValueError("hair_loss_reasons needs at least one positive percentage")
-        exact = [r.percentage * 100 / total for r in reasons]
-        shares = [int(x) for x in exact]
+        distributable = 100 - 5 * len(reasons)
+        exact = [r.percentage * distributable / total for r in reasons]
+        shares = [5 + int(x) for x in exact]
         # Largest-remainder method: hand the leftover points to the biggest fractions.
         by_fraction = sorted(range(len(reasons)), key=lambda i: exact[i] - shares[i], reverse=True)
         for i in by_fraction[: 100 - sum(shares)]:
             shares[i] += 1
-        return [r.model_copy(update={"percentage": s}) for r, s in zip(reasons, shares) if s > 0]
+        return [r.model_copy(update={"percentage": s}) for r, s in zip(reasons, shares)]
 
     @field_validator("clinical_observations")
     @classmethod
     def _drop_empty(cls, items):
-        return [item for item in items if item]
+        observations = [item for item in items if item]
+        if not 1 <= len(observations) <= 6:
+            raise ValueError("clinical_observations must contain between 1 and 6 non-empty items")
+        return observations
 
     @field_validator("limitations")
     @classmethod

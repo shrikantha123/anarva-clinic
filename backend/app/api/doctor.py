@@ -22,7 +22,7 @@ def login(body: LoginIn, request: Request, response: Response, settings: Setting
 
 @router.get("/assessments", response_model=PatientList, dependencies=[DoctorOnly])
 def list_assessments(db: DB):
-    return {"assessments": store.list_all(db, store.PATIENTS)}
+    return {"assessments": db.list_all(store.PATIENTS)}
 
 
 @router.patch("/assessments/{patient_id}/status", response_model=PatientStatusUpdated, dependencies=[DoctorOnly])

@@ -41,6 +41,9 @@ interface ReportStepProps {
   userInfo: UserInfo;
   photos: PhotoData;
   analysis: AnalysisResult;
+  saveError?: string | null;
+  isSaving?: boolean;
+  onRetrySave?: () => void;
   onRestart: () => void;
 }
 
@@ -48,23 +51,32 @@ export const ReportStep: React.FC<ReportStepProps> = ({
   userInfo,
   photos,
   analysis,
+  saveError,
+  isSaving = false,
+  onRetrySave,
   onRestart,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState('overview');
+  const localDate = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  };
   const [selectedSpecialist, setSelectedSpecialist] = useState(
     'Dr. S. Mukherjee (Senior Trichologist)'
   );
-  const [selectedDate, setSelectedDate] = useState('2026-09-30');
+  const [selectedDate, setSelectedDate] = useState(localDate);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:30 AM - Morning');
   const [consultationMode, setConsultationMode] = useState('In-Clinic Visit (Indiranagar Center)');
   const [isBooking, setIsBooking] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const handleConfirmAppointment = async () => {
     setIsBooking(true);
+    setBookingError(null);
     try {
-      await fetch('/api/appointments', {
+      const response = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,11 +88,11 @@ export const ReportStep: React.FC<ReportStepProps> = ({
           type: consultationMode,
         }),
       });
+      if (!response.ok) throw new Error('appointment_booking_failed');
       setModalOpen(false);
       showToast(`Appointment confirmed! Slot reserved for ${selectedDate}`);
     } catch {
-      setModalOpen(false);
-      showToast('Appointment reserved with Anarva Clinic desk.');
+      setBookingError('We could not confirm this appointment. Please try again.');
     } finally {
       setIsBooking(false);
     }
@@ -228,6 +240,22 @@ export const ReportStep: React.FC<ReportStepProps> = ({
 
           {/* Report Main Container */}
           <main className="p-4 sm:p-7 md:p-9 max-w-7xl mx-auto w-full flex flex-col gap-6 sm:gap-7">
+            {saveError && (
+              <div role="alert" className="flex items-start sm:items-center justify-between gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
+                <span>{saveError}</span>
+                {onRetrySave && (
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={onRetrySave}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                  >
+                    <RotateCcw className={`h-3.5 w-3.5 ${isSaving ? 'animate-spin' : ''}`} />
+                    {isSaving ? 'Retrying' : 'Retry save'}
+                  </button>
+                )}
+              </div>
+            )}
             
             {/* ====================================================================
                  2. PATIENT DETAILS CARD
@@ -1161,6 +1189,11 @@ export const ReportStep: React.FC<ReportStepProps> = ({
             </div>
 
             <div className="flex flex-col gap-4">
+              {bookingError && (
+                <div role="alert" className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-medium text-[#991B1B]">
+                  {bookingError}
+                </div>
+              )}
               <div>
                 <label className="text-xs font-semibold text-[#475569] block mb-1.5">
                   Select Specialist
@@ -1183,6 +1216,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   <input
                     type="date"
                     value={selectedDate}
+                    min={localDate()}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     className="p-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] bg-white outline-none focus:border-[#15803D]"
                   />

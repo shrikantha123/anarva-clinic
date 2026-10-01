@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash"
     ai_timeout_seconds: float = Field(60, gt=0)
     ai_max_attempts: int = Field(2, ge=1, le=5)
-    database_path: Path = ROOT / "backend" / "data" / "anarva.db"
-    doctor_username: str = "doctor@anarvaclinic.com"
+    supabase_url: str | None = None
+    supabase_service_role_key: SecretStr | None = None
+    doctor_username: str | None = None
     doctor_password: SecretStr | None = None
     # Signs doctor session cookies. Set it explicitly when running several instances.
     secret_key: SecretStr = Field(default_factory=lambda: SecretStr(secrets.token_urlsafe(32)))

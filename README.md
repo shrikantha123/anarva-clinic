@@ -34,7 +34,7 @@ Tests: `npm run test:backend` (or `pip install -r backend/requirements-dev.txt &
 | Artifact | Purpose |
 | --- | --- |
 | `Dockerfile` | Multi-stage build: Vite → `dist/`, then Python 3.12 + uvicorn |
-| `docker-compose.yml` | Single service on port 3000, persistent SQLite volume at `/data` |
+| `docker-compose.yml` | Single service on port 3000, with database storage in Supabase |
 | `.env` | Secrets (never commit); mount via `env_file` in Compose |
 
 ```bash
@@ -43,7 +43,7 @@ npm run build
 docker compose up --build -d
 ```
 
-Production checklist: `ENVIRONMENT=production`, strong `SECRET_KEY` and `DOCTOR_PASSWORD`, persistent `DATABASE_PATH`, HTTPS in front of the app.
+Production checklist: `ENVIRONMENT=production`, strong `SECRET_KEY`, `DOCTOR_USERNAME`, and `DOCTOR_PASSWORD`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, HTTPS in front of the app. Apply `supabase/schema.sql` to create the tables with RLS enabled; the service-role key belongs only in the backend environment.
 
 ## Repository layout
 
@@ -55,8 +55,8 @@ merged/
 ├── backend/
 │   ├── app/              # FastAPI application
 │   ├── tests/            # Pytest regression suite
-│   └── data/             # SQLite (local dev, gitignored)
 ├── legacy/               # Old prototype (reference only)
+├── supabase/             # Database schema and RLS setup
 ├── Dockerfile
 └── docker-compose.yml
 ```
@@ -65,11 +65,11 @@ merged/
 
 `api/` routes · `schemas/` Pydantic models (the AI contract lives in `schemas/analysis.py`) ·
 `services/` business logic · `ai/` prompt, Gemini client, retry/validation · `images.py` upload
-validation · `db.py` SQLite · `config.py` settings · `errors.py` error handling.
+validation · `storage.py` Supabase persistence · `config.py` settings · `errors.py` error handling.
 
 ## Environment
 
-See `.env.example`. Data is stored in SQLite at `DATABASE_PATH`; use a persistent volume in production.
+See `.env.example`. Patient assessments and appointments are stored in Supabase; SQLite is used only by isolated backend tests.
 
 ## legacy/
 

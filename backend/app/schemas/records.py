@@ -73,6 +73,13 @@ class AppointmentIn(BaseModel):
     type: Short = "In-Clinic Visit (Indiranagar Center)"
     notes: Long = ""
 
+    @field_validator("date")
+    @classmethod
+    def _not_in_the_past(cls, value):
+        if value < dt.date.today():
+            raise ValueError("appointment date cannot be in the past")
+        return value
+
 
 class AppointmentRecord(BaseModel):
     id: str

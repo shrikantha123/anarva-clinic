@@ -35,7 +35,7 @@ def verify_token(secret: str, token: str) -> bool:
 
 
 def login(settings: Settings, username: str, password: str, client_ip: str) -> str:
-    if settings.doctor_password is None:
+    if not settings.doctor_username or not settings.doctor_username.strip() or settings.doctor_password is None:
         raise AppError(503, "Doctor login is not configured")
     now = time.time()
     recent = [t for t in _failures[client_ip] if t > now - ATTEMPT_WINDOW_SECONDS]

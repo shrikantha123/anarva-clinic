@@ -126,7 +126,10 @@ export const UserInfoStep: React.FC<UserInfoStepProps> = ({ initialInfo, onCompl
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-[#2D3A40]">Gender *</label>
+              <label className="text-xs font-bold text-[#2D3A40] flex justify-between">
+                <span>Gender *</span>
+                {errors.gender && <span className="text-[11px] text-[#DC2626] font-normal">{errors.gender}</span>}
+              </label>
               <div className="grid grid-cols-3 gap-1.5">
                 {['Male', 'Female', 'Other'].map((g) => {
                   const isSel = formData.gender === g;
@@ -137,6 +140,7 @@ export const UserInfoStep: React.FC<UserInfoStepProps> = ({ initialInfo, onCompl
                       onClick={() => {
                         sound.playSelect();
                         setFormData({ ...formData, gender: g });
+                        if (errors.gender) setErrors({ ...errors, gender: '' });
                       }}
                       className={`py-2 px-1 rounded-xl text-xs font-bold transition-all text-center border cursor-pointer ${
                         isSel

@@ -21,7 +21,7 @@ def book(body: AppointmentIn, db: DB):
 
 @router.get("/appointments", response_model=AppointmentList, dependencies=[DoctorOnly])
 def list_appointments(db: DB):
-    return {"appointments": store.list_all(db, store.APPOINTMENTS)}
+    return {"appointments": db.list_all(store.APPOINTMENTS)}
 
 
 @router.patch("/appointments/{appointment_id}/status", response_model=AppointmentStatusUpdated, dependencies=[DoctorOnly])

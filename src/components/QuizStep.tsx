@@ -26,6 +26,9 @@ import q3CrownImg from '../assets/images/q3_crown_thinning_1790578871838.jpg';
 import q3DiffuseImg from '../assets/images/q3_diffuse_thinning_1790578928292.jpg';
 import q3PatchyImg from '../assets/images/patchy_hair_loss_1790577865155.jpg';
 import healthyScalpImg from '../assets/images/healthy_scalp_normal_1790577886948.jpg';
+import fatherImg from '../assets/images/father.png';
+import motherImg from '../assets/images/mother (1).png';
+import familyImg from '../assets/images/family.png';
 
 // Distinct Unique Clinical Images for Q7
 import q7DandruffImg from '../assets/images/scalp_dandruff_flaking_1790577831902.jpg';
@@ -161,7 +164,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
     sound.playSelect();
     setAnswers((prev) => {
       let list = [...prev.q5_family];
-      if (member === 'none' || member === 'unsure') {
+      if (member === 'none') {
         list = list.includes(member) ? [] : [member];
       } else {
         list = list.filter((m) => m !== 'none' && m !== 'unsure');
@@ -246,9 +249,9 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
       
       {/* Quiz Progress & Question Main Wrapper (Fills space nicely, zero scrolling) */}
       <div className="quiz-step-shell w-full max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0 overflow-y-auto sm:overflow-hidden">
-        
+        <div className="quiz-step-content-group flex flex-col flex-1 min-h-0">
         {/* Top Progress Track */}
-        <div className="flex flex-col gap-1 shrink-0 mb-1">
+        <div className="quiz-progress flex flex-col gap-1 shrink-0 mb-1">
           <div className="flex items-center justify-between text-[11px] font-bold text-[#5A6B72]">
             <span className="uppercase tracking-wider">Question {currentQ} of 8</span>
             <span className="text-[#16A34A]">{progressPercent}%</span>
@@ -434,7 +437,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <span>Location</span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
-                  Where are you experiencing the most hair loss?
+                  Which parts of your scalp are affected by hair loss?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72]">
                   Select all that apply. Tap the matching scalp regions.
@@ -610,12 +613,11 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
               {/* Uniform Equal Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-auto">
                 {[
-                  { id: 'father', label: 'Father', role: 'Immediate paternal', img: q3FrontalsImg },
-                  { id: 'maternal-gf', label: 'Maternal grandfather', role: 'X-chromosome linked', img: q3CrownImg },
-                  { id: 'other-relatives', label: 'Other relatives', role: 'Extended family', img: q3DiffuseImg },
-                  { id: 'multiple', label: 'Multiple family members', role: 'Strong genetic marker', img: q3PatchyImg },
-                  { id: 'none', label: 'No known family history', role: 'No hereditary signs', img: healthyScalpImg },
-                  { id: 'unsure', label: 'Not sure', role: 'Unknown history', img: q3MidsImg },
+                  { id: 'father', label: 'Father', role: 'Immediate paternal', img: fatherImg },
+                  { id: 'mother', label: 'Mother', role: 'Immediate maternal', img: motherImg },
+                  { id: 'multiple', label: 'Multiple family members', role: 'Strong genetic marker', img: familyImg },
+                    { id: 'uncle', label: 'Uncle', role: 'Extended family', img: fatherImg },
+                    { id: 'none', label: 'No family history', role: 'No hereditary signs', img: healthyScalpImg },
                 ].map((item) => {
                   const isSelected = answers.q5_family.includes(item.id);
                   return (
@@ -1011,6 +1013,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
               <span>{errorMsg}</span>
             </div>
           )}
+        </div>
         </div>
       </div>
 

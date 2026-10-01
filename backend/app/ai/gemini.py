@@ -1,6 +1,7 @@
 """Thin Gemini wrapper: one bounded call per attempt, with provider failures mapped to AIError."""
 import asyncio
 import logging
+import time
 
 from google.genai import errors, types
 
@@ -9,6 +10,8 @@ from app.logging_setup import event
 from app.schemas.analysis import AnalyzeResult
 
 logger = logging.getLogger("app.ai")
+MAX_OUTPUT_TOKENS = 4096
+THINKING_BUDGET = 2048
 
 # Used when the configured model returns capacity errors (503).
 MODEL_FALLBACKS = ("gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.8-flash")
@@ -29,8 +32,12 @@ class Gemini:
 
     async def _generate_once(self, model: str, contents: list) -> str:
         config = types.GenerateContentConfig(
-            response_mime_type="application/json", response_schema=AnalyzeResult
+            response_mime_type="application/json",
+            response_schema=AnalyzeResult,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
+            thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
         )
+        started = time.perf_counter()
         try:
             response = await asyncio.wait_for(
                 self._client.aio.models.generate_content(
@@ -39,16 +46,61 @@ class Gemini:
                 self._timeout,
             )
         except TimeoutError:
+            event(
+                logger,
+                "ai_provider_call_failed",
+                logging.WARNING,
+                model=model,
+                reason="timeout",
+                ms=int((time.perf_counter() - started) * 1000),
+            )
             raise AIError(504, "timeout", retryable=True) from None
         except errors.APIError as exc:
+            event(
+                logger,
+                "ai_provider_call_failed",
+                logging.WARNING,
+                model=model,
+                reason=f"provider_{exc.code}",
+                ms=int((time.perf_counter() - started) * 1000),
+            )
             if exc.code in (401, 403):
                 raise AIError(503, "provider_auth") from None
             retryable = exc.code in (408, 429) or exc.code >= 500
             raise AIError(502, f"provider_{exc.code}", retryable=retryable) from None
         except Exception as exc:  # network and SDK failures; never surface their details
+            event(
+                logger,
+                "ai_provider_call_failed",
+                logging.WARNING,
+                model=model,
+                reason=type(exc).__name__,
+                ms=int((time.perf_counter() - started) * 1000),
+            )
             raise AIError(502, type(exc).__name__, retryable=True) from None
         if not response.text:
+            event(
+                logger,
+                "ai_provider_call_failed",
+                logging.WARNING,
+                model=model,
+                reason="empty_response",
+                ms=int((time.perf_counter() - started) * 1000),
+            )
             raise AIError(502, "empty_response", retryable=True)
+        usage = getattr(response, "usage_metadata", None)
+        event(
+            logger,
+            "ai_provider_call_ok",
+            model=model,
+            model_version=getattr(response, "model_version", None),
+            ms=int((time.perf_counter() - started) * 1000),
+            response_chars=len(response.text),
+            prompt_tokens=getattr(usage, "prompt_token_count", None),
+            candidate_tokens=getattr(usage, "candidates_token_count", None),
+            thought_tokens=getattr(usage, "thoughts_token_count", None),
+            total_tokens=getattr(usage, "total_token_count", None),
+        )
         return response.text
 
     async def generate(self, contents: list) -> str:

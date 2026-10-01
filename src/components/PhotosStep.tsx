@@ -229,7 +229,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
   const all3Ready = Boolean(photos.front && photos.mid && photos.crown);
 
   return (
-    <div className="h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased overflow-hidden select-none">
+    <div className="photo-step h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased overflow-hidden select-none">
       
       {/* Hidden file input */}
       <input
@@ -241,10 +241,11 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
       />
 
       {/* Main Container */}
-      <div className="w-full max-w-xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0 overflow-y-auto sm:overflow-hidden">
+      <div className="photo-step-shell w-full max-w-xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0 overflow-y-auto sm:overflow-hidden">
+        <div className="photo-step-content-group flex flex-col flex-1 min-h-0">
         
         {/* ONE Top Tracker: Highlights invalid angle in red if AI rejected */}
-        <div className="grid grid-cols-3 gap-2 shrink-0 mb-1">
+        <div className="photo-step-tracker grid grid-cols-3 gap-2 shrink-0 mb-1">
           {[
             {
               id: 'front' as StepStage,
@@ -494,6 +495,7 @@ export const PhotosStep: React.FC<PhotosStepProps> = ({
             )}
           </div>
 
+        </div>
         </div>
       </div>
 

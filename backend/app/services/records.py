@@ -1,7 +1,6 @@
 """Patient assessments and appointments: business rules on top of the db layer."""
 import datetime as dt
 import secrets
-import sqlite3
 import uuid
 from collections.abc import Callable
 
@@ -9,6 +8,7 @@ from app import db, images
 from app.errors import AppError
 from app.schemas.analysis import SLOTS
 from app.schemas.records import AppointmentIn, PatientIn
+from app.storage import RecordStore
 
 
 def _now() -> str:
@@ -25,8 +25,8 @@ def _unique_code(prefix: str, taken: Callable[[str], bool]) -> str:
     raise AppError(503, "Could not allocate an id. Please try again.")
 
 
-def save_patient(conn: sqlite3.Connection, data: PatientIn) -> dict:
-    existing = db.find(conn, db.PATIENTS, "patient_id", data.patient_id) if data.patient_id else None
+def save_patient(conn: RecordStore, data: PatientIn) -> dict:
+    existing = conn.find(db.PATIENTS, "patient_id", data.patient_id) if data.patient_id else None
     if existing and (existing["name"], existing["phone"]) == (data.name, data.phone):
         return existing  # the same submission sent twice
 
@@ -37,7 +37,7 @@ def save_patient(conn: sqlite3.Connection, data: PatientIn) -> dict:
 
     # The frontend picks a random id; keep it unless it belongs to a different patient.
     patient_id = data.patient_id if data.patient_id and not existing else _unique_code(
-        "ANR", lambda code: db.find(conn, db.PATIENTS, "patient_id", code) is not None
+        "ANR", lambda code: conn.find(db.PATIENTS, "patient_id", code) is not None
     )
     record = {
         "patient_id": patient_id,
@@ -51,30 +51,32 @@ def save_patient(conn: sqlite3.Connection, data: PatientIn) -> dict:
         "status": "Pending Review",
         "created_at": _now(),
     }
-    db.insert(conn, db.PATIENTS, record)
+    conn.insert(db.PATIENTS, record)
     return record
 
 
-def book_appointment(conn: sqlite3.Connection, data: AppointmentIn) -> dict:
+def book_appointment(conn: RecordStore, data: AppointmentIn) -> dict:
     record = {
         "id": f"apt-{uuid.uuid4().hex[:12]}",
         "appointment_id": _unique_code(
-            "APT", lambda code: db.find(conn, db.APPOINTMENTS, "appointment_id", code) is not None
+            "APT", lambda code: conn.find(db.APPOINTMENTS, "appointment_id", code) is not None
         ),
         **data.model_dump(mode="json"),
         "status": "Confirmed",
         "created_at": _now(),
     }
-    db.insert(conn, db.APPOINTMENTS, record)
+    conn.insert(db.APPOINTMENTS, record)
     return record
 
 
-def set_patient_status(conn: sqlite3.Connection, patient_id: str, status: str) -> None:
-    if not db.set_status(conn, db.PATIENTS, status, "patient_id = ?", (patient_id,)):
+def set_patient_status(conn: RecordStore, patient_id: str, status: str) -> None:
+    if not conn.set_status(db.PATIENTS, status, "patient_id", patient_id):
         raise AppError(404, "Assessment not found")
 
 
-def set_appointment_status(conn: sqlite3.Connection, appointment_id: str, status: str) -> None:
-    where, params = "id = ? OR appointment_id = ?", (appointment_id, appointment_id)
-    if not db.set_status(conn, db.APPOINTMENTS, status, where, params):
+def set_appointment_status(conn: RecordStore, appointment_id: str, status: str) -> None:
+    updated = conn.set_status(db.APPOINTMENTS, status, "id", appointment_id)
+    if not updated:
+        updated = conn.set_status(db.APPOINTMENTS, status, "appointment_id", appointment_id)
+    if not updated:
         raise AppError(404, "Appointment not found")

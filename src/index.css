@@ -14,26 +14,199 @@
   border-radius: 0 !important;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 801px) {
   .quiz-step-shell {
-    justify-content: flex-start !important;
-    gap: 8px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    justify-content: center !important;
+    overflow-y: auto !important;
+  }
+
+  .quiz-step-content-group {
+    width: 100%;
+    flex: 0 0 auto !important;
+    gap: 12px;
+    margin-block: auto;
+  }
+
+  .quiz-progress {
+    width: 100%;
+    align-self: stretch;
   }
 
   .quiz-step-card {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    justify-content: flex-start !important;
-    gap: 12px;
-    padding: 12px !important;
+    width: 100%;
+    max-width: none;
+    flex: 0 0 auto !important;
+    min-height: max-content !important;
+    justify-content: center !important;
+    overflow: visible !important;
   }
 
   .quiz-step-card > div {
-    flex: 1 1 auto !important;
-    gap: 10px !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: max-content !important;
+    gap: 16px !important;
     justify-content: flex-start !important;
+  }
+
+  .quiz-step-card [class*="my-auto"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 901px) {
+  .photo-step {
+    height: auto !important;
+    flex: 1 1 0%;
+    min-height: 0;
+    justify-content: flex-start !important;
+  }
+
+  .photo-step-shell {
+    flex: 1 1 auto !important;
+    min-height: 0;
+    justify-content: flex-start !important;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+  }
+
+  .photo-step-content-group {
+    width: 100%;
+    flex: 0 0 auto !important;
+    gap: 12px;
+    margin-block: auto;
+  }
+
+  .photo-step-tracker {
+    width: 100%;
+    gap: 6px !important;
+  }
+
+  .photo-step-card {
+    flex: 0 0 auto !important;
+    min-height: max-content !important;
+    justify-content: flex-start !important;
+    gap: 16px;
+    padding: 20px !important;
+    overflow: visible !important;
+  }
+
+  .photo-step-media {
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: min(40dvh, 340px) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    aspect-ratio: 16 / 10 !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .quiz-step-shell {
+    justify-content: flex-start !important;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+  }
+
+  .quiz-step-content-group {
+    width: 100%;
+    flex: 0 0 auto !important;
+    gap: 8px;
+    margin-block: auto;
+  }
+
+  .quiz-progress {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .quiz-step-card {
+    width: 100%;
+    max-width: none;
+    align-self: center;
+    flex: 0 0 auto !important;
+    min-height: max-content !important;
+    justify-content: center !important;
+    padding: 26px !important;
+    overflow: visible !important;
+  }
+
+  .quiz-step-card > div {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: max-content !important;
+    margin-block: auto;
+    gap: 14px !important;
+    justify-content: flex-start !important;
+  }
+
+  .quiz-step-card .grid {
+    gap: 14px !important;
+  }
+
+  .quiz-step-card > div > .grid {
+    flex: 0 0 auto;
+    grid-auto-rows: auto;
+    align-content: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .quiz-step-shell {
+    justify-content: flex-start !important;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+  }
+
+  .quiz-step-content-group {
+    width: 100%;
+    flex: 0 0 auto !important;
+    gap: 8px;
+    margin-block: auto;
+  }
+
+  .quiz-step-card {
+    width: 100%;
+    max-width: 420px;
+    align-self: center;
+    flex: 0 0 auto !important;
+    min-height: max-content !important;
+    justify-content: center !important;
+    gap: 12px;
+    padding: 32px 16px !important;
+    overflow: visible !important;
+  }
+
+  .quiz-progress {
+    max-width: 420px;
+    align-self: center;
+  }
+
+  .quiz-step-card > div {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: max-content !important;
+    margin-block: auto;
+    gap: 22px !important;
+    justify-content: flex-start !important;
+  }
+
+  .quiz-step-card .grid {
+    row-gap: 22px !important;
+    column-gap: 16px !important;
+  }
+
+  .quiz-step-card > div > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .quiz-step-card [class*="my-auto"] {
@@ -42,30 +215,54 @@
   }
 
   .quiz-step-card h2 {
-    line-height: 1.2;
+    font-size: 20px !important;
+    line-height: 1.25;
   }
 
   .quiz-step-card h2 + p {
-    margin-top: 4px !important;
+    margin-top: 0 !important;
   }
 
-  .quiz-step-card .grid {
-    gap: 8px !important;
+  .quiz-step-card > div > .grid > button {
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 8px 10px !important;
+    align-self: center;
   }
 
-  .quiz-step-card .grid-cols-1 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .quiz-step-card > div > .grid > button:has(> div > img) {
+    height: 68px !important;
+    min-height: 68px !important;
+    gap: 4px;
+    padding: 4px 8px !important;
   }
 
-  .quiz-step-card .treatment-options,
-  .quiz-step-card .treatment-duration-options {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  .quiz-step-card > div > .grid > button:has(> div > img) > div:first-child {
+    width: 100% !important;
+    height: 34px !important;
+    flex: 0 0 34px;
   }
 
-  .quiz-step-card > div > .grid {
-    flex: 1 1 auto;
-    grid-auto-rows: minmax(64px, 1fr);
-    align-content: stretch;
+  .quiz-step-card > div > .grid > button:has(> div > img) > span {
+    flex: 0 0 auto;
+    min-width: 0;
+    font-size: 14px !important;
+  }
+
+  .quiz-step-card > div > .grid > button:has(> div > div > img) {
+    height: 68px !important;
+    min-height: 68px !important;
+    padding: 8px 10px !important;
+  }
+
+  .quiz-step-card .treatment-duration-options button {
+    min-height: 40px;
+    padding: 5px 8px !important;
+  }
+
+  .quiz-step-card button span[class*="text-xs"] {
+    font-size: 14px !important;
+    line-height: 1.2;
   }
 
   .photo-step-card {
@@ -84,20 +281,10 @@
 }
 
 @media (max-width: 360px) {
-  .quiz-step-card .grid button {
-    max-height: 96px;
-  }
-
-  .quiz-step-card .treatment-options button {
-    height: 48px !important;
-    min-height: 48px;
-    padding: 6px 4px !important;
-  }
-
   .quiz-step-card .treatment-duration-options button {
-    min-height: 44px;
-    padding: 4px 2px !important;
-    font-size: 10px;
+    min-height: 40px !important;
+    padding: 4px 6px !important;
+    font-size: 12px;
     line-height: 1.15;
   }
 }

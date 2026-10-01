@@ -71,8 +71,6 @@ export const DoctorPortal: React.FC = () => {
       } else {
         setIsAuthenticated(true);
         sound.playSuccess();
-        loadAssessments();
-        loadAppointments();
       }
     } catch {
       setLoginError('Could not connect to server. Please try again.');

@@ -7,10 +7,4 @@ services:
       - .env
     environment:
       ENVIRONMENT: production
-      DATABASE_PATH: /data/anarva.db
-    volumes:
-      - anarva_data:/data
     restart: unless-stopped
-
-volumes:
-  anarva_data:
