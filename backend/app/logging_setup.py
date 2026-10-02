@@ -11,8 +11,11 @@ from pathlib import Path
 from app import db
 
 request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
-ROOT = Path(__file__).resolve().parents[2]
-OPERATIONAL_LOG_PATH = ROOT / "backend" / "data" / "operational_logs.db"
+import tempfile
+
+# In Docker /app is parent.parent; fallback to data dir
+BASE_DIR = Path(__file__).resolve().parent.parent
+OPERATIONAL_LOG_PATH = BASE_DIR / "data" / "operational_logs.db"
 
 
 class JsonFormatter(logging.Formatter):
@@ -35,7 +38,15 @@ def event(logger: logging.Logger, message: str, level: int = logging.INFO, **fie
 
 
 def ensure_operational_log_db() -> Path:
-    OPERATIONAL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    global OPERATIONAL_LOG_PATH
+    try:
+        OPERATIONAL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    except (PermissionError, OSError):
+        # Container fallback: /tmp is always writable
+        fallback_dir = Path(tempfile.gettempdir()) / "anarva_data"
+        fallback_dir.mkdir(parents=True, exist_ok=True)
+        OPERATIONAL_LOG_PATH = fallback_dir / "operational_logs.db"
+    
     db.init_db(OPERATIONAL_LOG_PATH)
     return OPERATIONAL_LOG_PATH
 
