@@ -14,11 +14,12 @@ def login(body: LoginIn, request: Request, response: Response, settings: Setting
     client_ip = request.client.host if request.client else "unknown"
     token = auth.login(settings, body.username, body.password, client_ip)
     # The session lives in an HttpOnly cookie, so the frontend needs no token handling.
-    response.set_cookie(
+     response.set_cookie(
         auth.COOKIE_NAME, token, max_age=auth.TOKEN_TTL_SECONDS, httponly=True,
-        samesite="strict", secure=settings.production, path="/api",
+-       samesite="strict", secure=settings.production, path="/api",
++       samesite="none", secure=True, path="/api",
     )
-    return {"doctor": auth.DOCTOR_PROFILE}
+
 
 
 @router.get("/assessments", response_model=PatientList, dependencies=[DoctorOnly])
