@@ -1,258 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Clock,
-  Activity,
-  MapPin,
-  Droplets,
-  Users,
-  Calendar,
-  HeartPulse,
-  Pill,
-  ChevronRight,
-  ChevronLeft,
-  AlertCircle,
-  Check,
-  Zap,
-  Flame,
-} from 'lucide-react';
-import { QuizAnswers } from '../types';
-import { sound } from '../utils/audio';
-
-// Images for Q3 matching user's uploaded images
-import q3FrontalsImg from '../assets/images/q3_frontals_hairline_1790578848301.jpg';
-import q3TempleImg from '../assets/images/q3_temple_recession_1790578857963.jpg';
-import q3MidsImg from '../assets/images/midds - Copy.jpg';
-import q3CrownImg from '../assets/images/q3_crown_thinning_1790578871838.jpg';
-import q3DiffuseImg from '../assets/images/q3_diffuse_thinning_1790578928292.jpg';
-import q3PatchyImg from '../assets/images/patchy_hair_loss_1790577865155.jpg';
-import healthyScalpImg from '../assets/images/healthy_scalp_normal_1790577886948.jpg';
-import fatherImg from '../assets/images/father.png';
-import motherImg from '../assets/images/mother (1).png';
-import familyImg from '../assets/images/family.png';
-import uncleImg from '../assets/images/uncle.png';
-
-// Distinct Unique Clinical Images for Q7
-import q7DandruffImg from '../assets/images/scalp_dandruff_flaking_1790577831902.jpg';
-import q7ItchingImg from '../assets/images/q7_itching_irritation_1790579784356.jpg';
-import q7RednessImg from '../assets/images/q7_redness_erythema_1790579794827.jpg';
-import q7BurningImg from '../assets/images/q7_burning_scalp_1790579810907.jpg';
-import q7PainImg from '../assets/images/q7_pain_tenderness_1790579821092.jpg';
-import q7OilinessImg from '../assets/images/scalp_oily_greasy_1790577875798.jpg';
-
-interface QuizStepProps {
-  initialAnswers?: QuizAnswers;
-  onComplete: (answers: QuizAnswers) => void;
-}
-
-export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }) => {
-  const [currentQ, setCurrentQ] = useState(1);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const [answers, setAnswers] = useState<QuizAnswers>(
-    initialAnswers || {
-      q1_onset: '',
-      q2_progression: '',
-      q3_locations: [],
-      q4_shedding: 2,
-      q5_family: [],
-      q6_events: [],
-      q6_timing: '',
-      q7_symptoms: [],
-      q8_treatments: [],
-      q8_duration: '',
-    }
-  );
-
-  const [q4Interacted, setQ4Interacted] = useState(false);
-
-  useEffect(() => {
-    setErrorMsg(null);
-  }, [currentQ]);
-
-  // Validation
-  const validateCurrent = (): boolean => {
-    switch (currentQ) {
-      case 1:
-        if (!answers.q1_onset) {
-          setErrorMsg('Please select an option to continue.');
-          return false;
-        }
-        break;
-      case 2:
-        if (!answers.q2_progression) {
-          setErrorMsg('Please select an option to continue.');
-          return false;
-        }
-        break;
-      case 3:
-        if (!answers.q3_locations || answers.q3_locations.length === 0) {
-          setErrorMsg('Please select at least one area to continue.');
-          return false;
-        }
-        break;
-      case 4:
-        if (!q4Interacted && answers.q4_shedding === undefined) {
-          setErrorMsg('Please select an option to continue.');
-          return false;
-        }
-        break;
-      case 5:
-        if (!answers.q5_family || answers.q5_family.length === 0) {
-          setErrorMsg('Please select at least one option to continue.');
-          return false;
-        }
-        break;
-      case 6:
-        if (!answers.q6_events || answers.q6_events.length === 0) {
-          setErrorMsg('Please select at least one option to continue.');
-          return false;
-        }
-        break;
-      case 7:
-        if (!answers.q7_symptoms || answers.q7_symptoms.length === 0) {
-          setErrorMsg('Please select at least one option to continue.');
-          return false;
-        }
-        break;
-      case 8:
-        if (!answers.q8_treatments || answers.q8_treatments.length === 0) {
-          setErrorMsg('Please select at least one option to continue.');
-          return false;
-        }
-        break;
-    }
-    return true;
-  };
-
-  const handleNext = () => {
-    if (!validateCurrent()) return;
-    sound.playStep();
-    if (currentQ < 8) {
-      setCurrentQ((prev) => prev + 1);
-    } else {
-      onComplete(answers);
-    }
-  };
-
-  const handleBack = () => {
-    if (currentQ > 1) {
-      sound.playStep();
-      setCurrentQ((prev) => prev - 1);
-    }
-  };
-
-  // Toggle helpers
-  const toggleQ3Location = (loc: string) => {
-    sound.playSelect();
-    setAnswers((prev) => {
-      let list = [...prev.q3_locations];
-      if (loc === 'overall' || loc === 'patchy') {
-        list = list.includes(loc) ? list.filter((l) => l !== loc) : [loc];
-      } else {
-        list = list.filter((l) => l !== 'overall' && l !== 'patchy');
-        if (list.includes(loc)) {
-          list = list.filter((l) => l !== loc);
-        } else {
-          list.push(loc);
-        }
-      }
-      return { ...prev, q3_locations: list };
-    });
-    setErrorMsg(null);
-  };
-
-  const toggleQ5Family = (member: string) => {
-    sound.playSelect();
-    setAnswers((prev) => {
-      let list = [...prev.q5_family];
-      if (member === 'none') {
-        list = list.includes(member) ? [] : [member];
-      } else {
-        list = list.filter((m) => m !== 'none' && m !== 'unsure');
-        if (list.includes(member)) {
-          list = list.filter((m) => m !== member);
-        } else {
-          list.push(member);
-        }
-      }
-      return { ...prev, q5_family: list };
-    });
-    setErrorMsg(null);
-  };
-
-  const toggleQ6Event = (evt: string) => {
-    sound.playSelect();
-    setAnswers((prev) => {
-      let list = [...prev.q6_events];
-      if (evt === 'none6' || evt === 'unsure6') {
-        list = list.includes(evt) ? [] : [evt];
-      } else {
-        list = list.filter((e) => e !== 'none6' && e !== 'unsure6');
-        if (list.includes(evt)) {
-          list = list.filter((e) => e !== evt);
-        } else {
-          list.push(evt);
-        }
-      }
-      return { ...prev, q6_events: list };
-    });
-    setErrorMsg(null);
-  };
-
-  const toggleQ7Symptom = (sym: string) => {
-    sound.playSelect();
-    setAnswers((prev) => {
-      let list = [...prev.q7_symptoms];
-      if (sym === 'none7') {
-        list = list.includes('none7') ? [] : ['none7'];
-      } else {
-        list = list.filter((s) => s !== 'none7');
-        if (list.includes(sym)) {
-          list = list.filter((s) => s !== sym);
-        } else {
-          list.push(sym);
-        }
-      }
-      return { ...prev, q7_symptoms: list };
-    });
-    setErrorMsg(null);
-  };
-
-  const toggleQ8Treatment = (treat: string) => {
-    sound.playSelect();
-    setAnswers((prev) => {
-      let list = [...prev.q8_treatments];
-      if (treat === 'none8') {
-        list = list.includes('none8') ? [] : ['none8'];
-      } else {
-        list = list.filter((t) => t !== 'none8');
-        if (list.includes(treat)) {
-          list = list.filter((t) => t !== treat);
-        } else {
-          list.push(treat);
-        }
-      }
-      return { ...prev, q8_treatments: list };
-    });
-    setErrorMsg(null);
-  };
-
-  const hasQ6Triggers = answers.q6_events.some((e) =>
-    ['stress', 'illness', 'weightloss', 'diet', 'surgery', 'medication'].includes(e)
-  );
-
-  const hasQ8Treatments = answers.q8_treatments.some((t) => t !== 'none8');
-
-  const progressPercent = Math.round((currentQ / 8) * 100);
-
-  return (
-    <div className="quiz-step h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased overflow-hidden select-none">
+return (
+    <div className="quiz-step min-h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased select-none">
       
-      {/* Quiz Progress & Question Main Wrapper (Fills space nicely, zero scrolling) */}
-      <div className="quiz-step-shell w-full max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0 overflow-y-auto sm:overflow-hidden">
+      {/* Quiz Progress & Question Main Wrapper */}
+      <div className="quiz-step-shell w-full max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex flex-col flex-1 justify-between min-h-0">
         <div className="quiz-step-content-group flex flex-col flex-1 min-h-0">
         {/* Top Progress Track */}
-        <div className="quiz-progress flex flex-col gap-1 shrink-0 mb-1">
+        <div className="quiz-progress flex flex-col gap-1 shrink-0 mb-1.5">
           <div className="flex items-center justify-between text-[11px] font-bold text-[#5A6B72]">
             <span className="uppercase tracking-wider">Question {currentQ} of 8</span>
             <span className="text-[#16A34A]">{progressPercent}%</span>
@@ -266,10 +19,10 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
         </div>
 
         {/* Question Card Container */}
-        <div className="quiz-step-card bg-white border border-[#DDE5E8] rounded-2xl p-4 sm:p-6 shadow-[0_1px_4px_rgba(11,18,21,0.04)] flex flex-col justify-between flex-1 min-h-0 overflow-y-auto sm:overflow-hidden">
+        <div className="quiz-step-card bg-white border border-[#DDE5E8] rounded-2xl p-3.5 sm:p-6 shadow-[0_1px_4px_rgba(11,18,21,0.04)] flex flex-col justify-between flex-1 min-h-0">
           
           {/* =========================================================
-              QUESTION 1 — ONSET (UNIFORM HEIGHT & WIDTH TILES)
+              QUESTION 1 — ONSET
               ========================================================= */}
           {currentQ === 1 && (
             <div className="flex flex-col justify-between h-full gap-3">
@@ -278,7 +31,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <Clock className="w-3.5 h-3.5" />
                   <span>Onset</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   When did you first notice your hair loss?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72] mt-0.5">
@@ -286,8 +39,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                 </p>
               </div>
 
-              {/* Uniform Equal Width & Height Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 my-auto">
                 {[
                   { id: '<3mo', label: 'Less than 3 months', badge: 'Recent onset' },
                   { id: '3-6mo', label: '3 – 6 months', badge: 'Developing' },
@@ -306,25 +58,25 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                         setAnswers((prev) => ({ ...prev, q1_onset: item.id }));
                         setErrorMsg(null);
                       }}
-                      className={`h-22 sm:h-28 p-3 sm:p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                      className={`min-h-[76px] sm:min-h-[90px] h-auto p-2.5 sm:p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
                           : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-[10px] font-bold text-[#8FA3AB] uppercase tracking-wider">
+                      <div className="flex items-center justify-between w-full gap-1">
+                        <span className="text-[9px] sm:text-[10px] font-bold text-[#8FA3AB] uppercase tracking-wider truncate">
                           {item.badge}
                         </span>
                         <div
-                          className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+                          className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                             isSelected ? 'bg-[#16A34A] text-white' : 'border border-[#CBD5E1] bg-white'
                           }`}
                         >
-                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                          {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
                       </div>
-                      <span className={`text-xs sm:text-sm font-bold leading-tight ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
+                      <span className={`text-xs sm:text-sm font-bold leading-snug break-words mt-1 ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
                         {item.label}
                       </span>
                     </button>
@@ -335,56 +87,29 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
           )}
 
           {/* =========================================================
-              QUESTION 2 — PROGRESSION (UNIFORM EQUAL CARDS WITH TRENDS)
+              QUESTION 2 — PROGRESSION
               ========================================================= */}
           {currentQ === 2 && (
             <div className="flex flex-col justify-between h-full gap-3">
               <div>
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] uppercase tracking-wider">
-                  <Activity className="w-3.5 h-3.5" />
-                  <span>Pattern</span>
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Progression</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
-                  How has your hair loss changed over time?
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                  How would you describe the progression?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72] mt-0.5">
-                  Choose the pattern that most closely describes your experience.
+                  Select the option that best matches your pattern over time.
                 </p>
               </div>
 
-              {/* Uniform Equal Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 my-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 my-auto">
                 {[
-                  {
-                    id: 'gradual',
-                    name: 'Gradual and progressive',
-                    curve: 'M 5,8 L 35,12 L 65,18 L 105,24',
-                    dot: { cx: 105, cy: 24 },
-                  },
-                  {
-                    id: 'sudden',
-                    name: 'Sudden',
-                    curve: 'M 5,8 L 50,8 L 55,24 L 105,24',
-                    dot: { cx: 105, cy: 24 },
-                  },
-                  {
-                    id: 'fluctuating',
-                    name: 'Comes and goes',
-                    curve: 'M 5,14 L 25,6 L 45,22 L 65,8 L 85,22 L 105,14',
-                    dot: { cx: 105, cy: 14 },
-                  },
-                  {
-                    id: 'stable',
-                    name: 'Stable / little change',
-                    curve: 'M 5,14 L 105,14',
-                    dot: { cx: 105, cy: 14 },
-                  },
-                  {
-                    id: 'unsure',
-                    name: 'Not sure',
-                    curve: '',
-                    isDashed: true,
-                  },
+                  { id: 'gradual', title: 'Gradual', desc: 'Slow thinning over months or years', badge: 'Standard' },
+                  { id: 'rapid', title: 'Rapid', desc: 'Noticeable loss over weeks', badge: 'Active' },
+                  { id: 'sudden', title: 'Sudden', desc: 'Woke up with sudden clumps or patches', badge: 'Acute' },
+                  { id: 'fluctuating', title: 'Fluctuating', desc: 'Periods of loss followed by recovery', badge: 'Episodic' },
                 ].map((item) => {
                   const isSelected = answers.q2_progression === item.id;
                   return (
@@ -396,29 +121,31 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                         setAnswers((prev) => ({ ...prev, q2_progression: item.id }));
                         setErrorMsg(null);
                       }}
-                      className={`h-20 sm:h-24 p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                      className={`min-h-[72px] sm:min-h-[84px] h-auto p-3 sm:p-4 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
                         isSelected
                           ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
                           : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
                       }`}
                     >
-                      <div className="flex flex-col min-w-0 pr-1">
-                        <span className={`text-xs sm:text-sm font-bold leading-tight ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
-                          {item.name}
+                      <div className="flex flex-col flex-1 min-w-0 pr-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
+                            {item.title}
+                          </span>
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#64748B]">
+                            {item.badge}
+                          </span>
+                        </div>
+                        <span className="text-[11px] sm:text-xs text-[#5A6B72] mt-0.5 leading-snug break-words">
+                          {item.desc}
                         </span>
                       </div>
-                      
-                      <div className="w-20 h-9 shrink-0 flex items-center justify-center bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] px-1.5">
-                        <svg className="w-full h-full" viewBox="0 0 110 28" fill="none">
-                          {item.isDashed ? (
-                            <line x1="10" y1="14" x2="100" y2="14" stroke="#94A3B8" strokeWidth="2.5" strokeDasharray="4,4" />
-                          ) : (
-                            <>
-                              <path d={item.curve} stroke={isSelected ? '#16A34A' : '#94A3B8'} strokeWidth="2.5" strokeLinecap="round" />
-                              {item.dot && <circle cx={item.dot.cx} cy={item.dot.cy} r="3" fill={isSelected ? '#16A34A' : '#94A3B8'} />}
-                            </>
-                          )}
-                        </svg>
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected ? 'bg-[#16A34A] text-white' : 'border border-[#CBD5E1] bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                       </div>
                     </button>
                   );
@@ -428,16 +155,16 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
           )}
 
           {/* =========================================================
-              QUESTION 3 — LOCATION (USING USER'S EXACT UPLOADED IMAGES)
+              QUESTION 3 — AFFECTED REGIONS
               ========================================================= */}
           {currentQ === 3 && (
             <div className="flex flex-col justify-between h-full gap-2">
               <div>
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] uppercase tracking-wider">
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>Location</span>
+                  <span>Affected Areas</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   Which parts of your scalp are affected by hair loss?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72]">
@@ -445,8 +172,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                 </p>
               </div>
 
-              {/* Exact user-provided realistic scalp images with UNIFORM HEIGHT & WIDTH */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 my-auto">
                 {[
                   { id: 'front', label: 'Front / Hairline', img: q3FrontalsImg },
                   { id: 'temples', label: 'Temples', img: q3TempleImg },
@@ -461,14 +187,13 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       key={item.id}
                       type="button"
                       onClick={() => toggleQ3Location(item.id)}
-                      className={`group overflow-hidden rounded-xl border p-1.5 sm:p-2 text-left transition-all flex flex-col justify-between h-28 sm:h-32 cursor-pointer ${
+                      className={`group overflow-hidden rounded-xl border p-1.5 sm:p-2 text-left transition-all flex flex-col justify-between min-h-[116px] sm:min-h-[130px] h-auto cursor-pointer ${
                         isSelected
                           ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
                           : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
                       }`}
                     >
-                      {/* Scalp Image Box (Consistent Equal Height) */}
-                      <div className="w-full h-18 sm:h-22 rounded-lg overflow-hidden relative bg-[#0F172A]">
+                      <div className="w-full h-16 sm:h-20 rounded-lg overflow-hidden relative bg-[#0F172A]">
                         <img
                           src={item.img}
                           alt={item.label}
@@ -481,8 +206,8 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between px-1 mt-1">
-                        <span className={`text-xs sm:text-sm font-bold truncate ${isSelected ? 'text-[#16A34A]' : 'text-[#2D3A40]'}`}>
+                      <div className="flex items-center justify-between px-0.5 mt-1">
+                        <span className={`text-xs font-bold leading-tight break-words truncate ${isSelected ? 'text-[#16A34A]' : 'text-[#2D3A40]'}`}>
                           {item.label}
                         </span>
                         <div
@@ -501,7 +226,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
           )}
 
           {/* =========================================================
-              QUESTION 4 — SHEDDING (LARGE PROPORTIONAL GAUGE SLIDER)
+              QUESTION 4 — SHEDDING
               ========================================================= */}
           {currentQ === 4 && (
             <div className="flex flex-col justify-between h-full gap-3">
@@ -510,7 +235,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <Droplets className="w-3.5 h-3.5" />
                   <span>Shedding</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   Have you noticed increased hair shedding?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72] mt-0.5">
@@ -518,50 +243,8 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                 </p>
               </div>
 
-              {/* Severity Gauge Slider UI */}
-              <div className="bg-[#F8FAFC] border border-[#DDE5E8] rounded-xl p-4 sm:p-6 my-auto flex flex-col gap-5">
-                <div className="flex justify-between items-center text-xs sm:text-sm font-semibold">
-                  <span className="text-[#5A6B72]">Shedding Level:</span>
-                  <span className="text-[#16A34A] font-bold text-sm sm:text-base bg-white px-3 py-1 rounded-full border border-[#BBF7D0]">
-                    {['No noticeable increase', 'Mild shedding', 'Moderate shedding', 'Heavy shedding', 'Sudden / excessive'][answers.q4_shedding]}
-                  </span>
-                </div>
-
-                {/* Track with 5 clickable stops */}
-                <div className="relative flex items-center justify-between px-3 py-3">
-                  <div className="absolute left-6 right-6 h-2.5 bg-[#E2E8F0] rounded-full">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#22C55E] via-[#EAB308] to-[#EF4444] rounded-full transition-all duration-300"
-                      style={{ width: `${(answers.q4_shedding / 4) * 100}%` }}
-                    />
-                  </div>
-
-                  {[0, 1, 2, 3, 4].map((step) => {
-                    const isSelected = answers.q4_shedding === step;
-                    return (
-                      <button
-                        key={step}
-                        type="button"
-                        onClick={() => {
-                          sound.playSelect();
-                          setQ4Interacted(true);
-                          setAnswers((prev) => ({ ...prev, q4_shedding: step }));
-                          setErrorMsg(null);
-                        }}
-                        className={`relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] shadow-sm scale-110'
-                            : 'bg-white border-2 border-[#CBD5E1] text-[#64748B] hover:border-[#16A34A]'
-                        }`}
-                      >
-                        {step + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Segmented Buttons of equal sizes */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              <div className="my-auto space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {[
                     { id: 0, label: 'No noticeable' },
                     { id: 1, label: 'Mild' },
@@ -580,7 +263,9 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                           setAnswers((prev) => ({ ...prev, q4_shedding: lvl.id }));
                           setErrorMsg(null);
                         }}
-                        className={`h-11 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                        className={`min-h-[42px] sm:min-h-[44px] h-auto py-2 px-1.5 sm:px-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center cursor-pointer text-center leading-snug break-words ${
+                          lvl.id === 4 ? 'col-span-2 sm:col-span-1' : ''
+                        } ${
                           isSelected
                             ? 'bg-[#16A34A] text-white shadow-xs'
                             : 'bg-white border border-[#DDE5E8] text-[#5A6B72] hover:bg-[#F1F5F9]'
@@ -596,7 +281,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
           )}
 
           {/* =========================================================
-              QUESTION 5 — FAMILY HISTORY (UNIFORM PEDIGREE CARDS)
+              QUESTION 5 — FAMILY HISTORY
               ========================================================= */}
           {currentQ === 5 && (
             <div className="flex flex-col justify-between h-full gap-3">
@@ -605,20 +290,19 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <Users className="w-3.5 h-3.5" />
                   <span>Family History</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   Does hair loss run in your family?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72] mt-0.5">Select all that apply.</p>
               </div>
 
-              {/* Uniform Equal Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 my-auto">
                 {[
                   { id: 'father', label: 'Father', role: 'Immediate paternal', img: fatherImg },
                   { id: 'mother', label: 'Mother', role: 'Immediate maternal', img: motherImg },
                   { id: 'multiple', label: 'Multiple family members', role: 'Strong genetic marker', img: familyImg },
-                    { id: 'uncle', label: 'Uncle', role: 'Extended family', img: uncleImg },
-                    { id: 'none', label: 'No family history', role: 'No hereditary signs', img: healthyScalpImg },
+                  { id: 'uncle', label: 'Uncle', role: 'Extended family', img: uncleImg },
+                  { id: 'none', label: 'No family history', role: 'No hereditary signs', img: healthyScalpImg },
                 ].map((item) => {
                   const isSelected = answers.q5_family.includes(item.id);
                   return (
@@ -626,21 +310,21 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       key={item.id}
                       type="button"
                       onClick={() => toggleQ5Family(item.id)}
-                      className={`h-16 sm:h-20 p-3 sm:p-4 rounded-xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                      className={`min-h-[64px] sm:min-h-[72px] h-auto p-2.5 sm:p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2.5 cursor-pointer ${
                         isSelected
                           ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
                           : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-10 rounded-lg overflow-hidden shrink-0 bg-[#0F172A]">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-11 h-9 sm:w-12 sm:h-10 rounded-lg overflow-hidden shrink-0 bg-[#0F172A]">
                           <img src={item.img} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className={`text-xs sm:text-sm font-bold truncate ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
+                          <span className={`text-xs sm:text-sm font-bold break-words leading-tight ${isSelected ? 'text-[#0B1215]' : 'text-[#2D3A40]'}`}>
                             {item.label}
                           </span>
-                          <span className="text-[11px] text-[#8FA3AB] truncate">{item.role}</span>
+                          <span className="text-[10px] sm:text-[11px] text-[#8FA3AB] break-words mt-0.5">{item.role}</span>
                         </div>
                       </div>
 
@@ -649,7 +333,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                           isSelected ? 'bg-[#16A34A] border-[#16A34A] text-white' : 'border-[#CBD5E1] bg-white'
                         }`}
                       >
-                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                       </div>
                     </button>
                   );
@@ -668,13 +352,12 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Recent Events</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   Have you recently experienced any of these?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72] mt-0.5">Select all that apply.</p>
               </div>
 
-              {/* Uniform Equal Grid of 8 options */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-auto">
                 {[
                   { id: 'stress', label: 'Significant stress' },
@@ -692,24 +375,23 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       key={item.id}
                       type="button"
                       onClick={() => toggleQ6Event(item.id)}
-                      className={`h-16 sm:h-20 p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                      className={`min-h-[60px] sm:min-h-[70px] h-auto p-2 sm:p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
                         isSelected
                           ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
                           : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
                       }`}
                     >
-                      <span className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#0B1215]' : 'text-[#475569]'}`}>
+                      <span className={`text-[11px] sm:text-xs font-bold leading-tight break-words text-center ${isSelected ? 'text-[#0B1215]' : 'text-[#475569]'}`}>
                         {item.label}
                       </span>
-                      {isSelected && <span className="text-[10px] text-[#16A34A] font-bold">✓ Selected</span>}
+                      {isSelected && <span className="text-[9px] text-[#16A34A] font-extrabold mt-0.5">✓ Selected</span>}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Inline Timing Selector */}
               {hasQ6Triggers && (
-                <div className="p-2.5 bg-[#F8FAFC] border border-[#BBF7D0] rounded-xl flex flex-col gap-1.5">
+                <div className="p-2.5 bg-[#F8FAFC] border border-[#BBF7D0] rounded-xl flex flex-col gap-1.5 mt-1">
                   <span className="text-xs font-bold text-[#0B1215]">When did this happen?</span>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                     {[
@@ -727,7 +409,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                             sound.playSelect();
                             setAnswers((prev) => ({ ...prev, q6_timing: time.id }));
                           }}
-                          className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer text-center leading-tight ${
                             isTimeSel ? 'bg-[#16A34A] text-white' : 'bg-white border border-[#DDE5E8] text-[#5A6B72]'
                           }`}
                         >
@@ -742,7 +424,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
           )}
 
           {/* =========================================================
-              QUESTION 7 — SCALP SYMPTOMS (EVERY OPTION HAS UNIQUE IMAGE, NO SYMPTOMS IS TEXT-ONLY)
+              QUESTION 7 — SCALP SYMPTOMS
               ========================================================= */}
           {currentQ === 7 && (
             <div className="flex flex-col justify-between h-full gap-2">
@@ -751,7 +433,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <HeartPulse className="w-3.5 h-3.5" />
                   <span>Scalp Symptoms</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   Do you have any scalp symptoms?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72]">
@@ -759,148 +441,43 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                 </p>
               </div>
 
-              {/* 6 Unique Clinical Photo Cards + 1 Full Width Text-Only "No symptoms" card */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-auto">
-                {/* 1. Dandruff (Unique Macro Flaking Photo) */}
-                <button
-                  type="button"
-                  onClick={() => toggleQ7Symptom('dandruff')}
-                  className={`overflow-hidden rounded-xl border p-1.5 text-left transition-all flex flex-col justify-between h-24 sm:h-28 cursor-pointer ${
-                    answers.q7_symptoms.includes('dandruff')
-                      ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
-                      : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
-                  }`}
-                >
-                  <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
-                    <img src={q7DandruffImg} alt="Dandruff / flaking" className="w-full h-full object-cover" />
-                    {answers.q7_symptoms.includes('dandruff') && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 my-auto">
+                {[
+                  { id: 'dandruff', label: 'Dandruff / flaking', img: q7DandruffImg },
+                  { id: 'itching', label: 'Itching', img: q7ItchingImg },
+                  { id: 'redness', label: 'Redness', img: q7RednessImg },
+                  { id: 'burning', label: 'Burning', img: q7BurningImg },
+                  { id: 'pain', label: 'Pain / tenderness', img: q7PainImg },
+                  { id: 'oiliness', label: 'Excess oiliness', img: q7OilinessImg },
+                ].map((symptom) => {
+                  const isSelected = answers.q7_symptoms.includes(symptom.id);
+                  return (
+                    <button
+                      key={symptom.id}
+                      type="button"
+                      onClick={() => toggleQ7Symptom(symptom.id)}
+                      className={`overflow-hidden rounded-xl border p-1.5 pb-2 text-left transition-all flex flex-col justify-between min-h-[105px] sm:min-h-[120px] h-auto cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
+                          : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
+                      }`}
+                    >
+                      <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
+                        <img src={symptom.img} alt={symptom.label} className="w-full h-full object-cover" />
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-1 truncate">
-                    Dandruff / flaking
-                  </span>
-                </button>
-
-                {/* 2. Itching (Unique Irritated Scratch Macro Photo) */}
-                <button
-                  type="button"
-                  onClick={() => toggleQ7Symptom('itching')}
-                  className={`overflow-hidden rounded-xl border p-1.5 text-left transition-all flex flex-col justify-between h-24 sm:h-28 cursor-pointer ${
-                    answers.q7_symptoms.includes('itching')
-                      ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
-                      : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
-                  }`}
-                >
-                  <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
-                    <img src={q7ItchingImg} alt="Itching" className="w-full h-full object-cover" />
-                    {answers.q7_symptoms.includes('itching') && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-1 truncate">
-                    Itching
-                  </span>
-                </button>
-
-                {/* 3. Redness (Unique Erythematous Skin Photo) */}
-                <button
-                  type="button"
-                  onClick={() => toggleQ7Symptom('redness')}
-                  className={`overflow-hidden rounded-xl border p-1.5 text-left transition-all flex flex-col justify-between h-24 sm:h-28 cursor-pointer ${
-                    answers.q7_symptoms.includes('redness')
-                      ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
-                      : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
-                  }`}
-                >
-                  <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
-                    <img src={q7RednessImg} alt="Redness" className="w-full h-full object-cover" />
-                    {answers.q7_symptoms.includes('redness') && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-1 truncate">
-                    Redness
-                  </span>
-                </button>
-
-                {/* 4. Burning (Unique Inflamed Burning Scalp Photo) */}
-                <button
-                  type="button"
-                  onClick={() => toggleQ7Symptom('burning')}
-                  className={`overflow-hidden rounded-xl border p-1.5 text-left transition-all flex flex-col justify-between h-24 sm:h-28 cursor-pointer ${
-                    answers.q7_symptoms.includes('burning')
-                      ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
-                      : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
-                  }`}
-                >
-                  <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
-                    <img src={q7BurningImg} alt="Burning" className="w-full h-full object-cover" />
-                    {answers.q7_symptoms.includes('burning') && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-1 truncate">
-                    Burning
-                  </span>
-                </button>
-
-                {/* 5. Scalp Pain / Tenderness (Unique Tender Follicular Photo) */}
-                <button
-                  type="button"
-                  onClick={() => toggleQ7Symptom('pain')}
-                  className={`overflow-hidden rounded-xl border p-1.5 text-left transition-all flex flex-col justify-between h-24 sm:h-28 cursor-pointer ${
-                    answers.q7_symptoms.includes('pain')
-                      ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
-                      : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
-                  }`}
-                >
-                  <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
-                    <img src={q7PainImg} alt="Scalp pain / tenderness" className="w-full h-full object-cover" />
-                    {answers.q7_symptoms.includes('pain') && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-1 truncate">
-                    Scalp pain / tenderness
-                  </span>
-                </button>
-
-                {/* 6. Excess Oiliness (Unique Sebum Shiny Photo) */}
-                <button
-                  type="button"
-                  onClick={() => toggleQ7Symptom('oiliness')}
-                  className={`overflow-hidden rounded-xl border p-1.5 text-left transition-all flex flex-col justify-between h-24 sm:h-28 cursor-pointer ${
-                    answers.q7_symptoms.includes('oiliness')
-                      ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10'
-                      : 'bg-white border-[#DDE5E8] hover:border-[#16A34A]'
-                  }`}
-                >
-                  <div className="w-full h-15 sm:h-18 rounded-lg overflow-hidden bg-slate-900 relative">
-                    <img src={q7OilinessImg} alt="Excess oiliness" className="w-full h-full object-cover" />
-                    {answers.q7_symptoms.includes('oiliness') && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-1 truncate">
-                    Excess oiliness
-                  </span>
-                </button>
+                      <span className="text-[11px] sm:text-xs font-bold text-[#0B1215] px-0.5 line-clamp-1 break-words mt-1">
+                        {symptom.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* 7. No Symptoms (TEXT ONLY as strictly requested) */}
               <button
                 type="button"
                 onClick={() => toggleQ7Symptom('none7')}
@@ -926,13 +503,12 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   <Pill className="w-3.5 h-3.5" />
                   <span>Previous Treatments</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
+                <h2 className="text-base sm:text-2xl font-bold text-[#0B1215] tracking-tight leading-snug">
                   Have you used any treatments for your hair loss?
                 </h2>
                 <p className="text-xs sm:text-sm text-[#5A6B72]">Select all that apply.</p>
               </div>
 
-              {/* Uniform Equal Grid of 8 options */}
               <div className="treatment-options grid grid-cols-2 sm:grid-cols-4 gap-2 my-auto">
                 {[
                   { id: 'minoxidil', label: 'Minoxidil' },
@@ -950,18 +526,18 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                       key={item.id}
                       type="button"
                       onClick={() => toggleQ8Treatment(item.id)}
-                      className={`h-16 sm:h-20 p-3 rounded-full text-center transition-all flex items-center justify-between gap-1.5 cursor-pointer ${
+                      className={`min-h-[52px] sm:min-h-[60px] h-auto p-2.5 sm:p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-1.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-[#B91C1C] text-white shadow-xs'
-                          : 'bg-[#F8FAFC] text-[#475569] hover:bg-[#F1F5F9]'
+                          ? 'bg-[#F0FDF4] border-[#16A34A] ring-2 ring-[#16A34A]/10 shadow-xs'
+                          : 'bg-white border-[#DDE5E8] hover:border-[#16A34A] hover:bg-[#F6F9FA]'
                       }`}
                     >
-                      <span className={`text-xs sm:text-sm font-bold truncate ${isSelected ? 'text-[#0B1215]' : 'text-[#475569]'}`}>
+                      <span className={`text-[11px] sm:text-xs font-bold break-words leading-tight flex-1 ${isSelected ? 'text-[#0B1215]' : 'text-[#475569]'}`}>
                         {item.label}
                       </span>
                       <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-white/20 text-white' : 'bg-white text-[#94A3B8]'
+                        className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                          isSelected ? 'bg-[#16A34A] border-[#16A34A] text-white' : 'border-[#CBD5E1] bg-white'
                         }`}
                       >
                         {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -971,9 +547,8 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                 })}
               </div>
 
-              {/* Inline Treatment Duration Selector */}
               {hasQ8Treatments && (
-                <div className="p-2.5 bg-[#F8FAFC] border border-[#BBF7D0] rounded-xl flex flex-col gap-1.5">
+                <div className="p-2.5 bg-[#F8FAFC] border border-[#BBF7D0] rounded-xl flex flex-col gap-1.5 mt-1">
                   <span className="text-xs font-bold text-[#0B1215]">How long have you used this treatment?</span>
                   <div className="treatment-duration-options grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     {[
@@ -993,7 +568,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                             sound.playSelect();
                             setAnswers((prev) => ({ ...prev, q8_duration: dur.id }));
                           }}
-                          className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer text-center leading-tight ${
                             isDurSel ? 'bg-[#16A34A] text-white' : 'bg-white border border-[#DDE5E8] text-[#5A6B72]'
                           }`}
                         >
@@ -1018,8 +593,8 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
         </div>
       </div>
 
-      {/* Sticky Bottom Actions Bar (Compact Height: 52px) */}
-      <div className="bg-white border-t border-[#DDE5E8] px-3 sm:px-6 py-2 shadow-xs shrink-0">
+      {/* Sticky Bottom Actions Bar */}
+      <div className="sticky bottom-0 z-40 bg-white border-t border-[#DDE5E8] px-3 sm:px-6 py-2 shadow-xs shrink-0">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <button
             type="button"
@@ -1045,4 +620,3 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
       </div>
     </div>
   );
-};
