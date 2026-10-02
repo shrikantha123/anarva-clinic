@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Response
 
 from app import db as store
 from app.deps import DB, DoctorOnly, SettingsDep
+from app.logging_setup import read_recent_operation_logs
 from app.schemas.records import LoginIn, LoginOut, PatientList, PatientStatusIn, PatientStatusUpdated
 from app.services import auth, records
 
@@ -29,3 +30,8 @@ def list_assessments(db: DB):
 def update_status(patient_id: str, body: PatientStatusIn, db: DB):
     records.set_patient_status(db, patient_id, body.status)
     return {"patient_id": patient_id, "status": body.status}
+
+
+@router.get("/logs", dependencies=[DoctorOnly])
+def list_logs():
+    return {"logs": read_recent_operation_logs(200)}

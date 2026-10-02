@@ -819,6 +819,12 @@ body.menu-open {
   gap: 16px;
 }
 
+.reviews-all-link {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
 .review-slider {
   display: flex;
   overflow-x: auto;

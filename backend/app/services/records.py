@@ -25,10 +25,10 @@ def _unique_code(prefix: str, taken: Callable[[str], bool]) -> str:
     raise AppError(503, "Could not allocate an id. Please try again.")
 
 
-def save_patient(conn: RecordStore, data: PatientIn) -> dict:
+def save_patient(conn: RecordStore, data: PatientIn) -> tuple[dict, bool]:
     existing = conn.find(db.PATIENTS, "patient_id", data.patient_id) if data.patient_id else None
     if existing and (existing["name"], existing["phone"]) == (data.name, data.phone):
-        return existing  # the same submission sent twice
+        return existing, False  # the same submission sent twice
 
     try:
         photos = {slot: images.to_data_uri(getattr(data.photo_urls, slot)) for slot in SLOTS}
@@ -52,7 +52,7 @@ def save_patient(conn: RecordStore, data: PatientIn) -> dict:
         "created_at": _now(),
     }
     conn.insert(db.PATIENTS, record)
-    return record
+    return record, True
 
 
 def book_appointment(conn: RecordStore, data: AppointmentIn) -> dict:

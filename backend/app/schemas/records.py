@@ -67,7 +67,7 @@ class PatientStatusUpdated(BaseModel):
 class AppointmentIn(BaseModel):
     patient_name: Short = "Patient"
     patient_phone: Short = ""
-    specialist: Short = "Dr. S. Mukherjee (Senior Trichologist)"
+    specialist: Short = "Anarva Clinic Team"
     date: dt.date = Field(default_factory=dt.date.today)
     time_slot: Short = "10:30 AM - Morning"
     type: Short = "In-Clinic Visit (Indiranagar Center)"

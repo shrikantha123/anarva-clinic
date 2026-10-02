@@ -16,7 +16,7 @@ from app.config import APP_BASE, DIST_DIR, SITE_DIR, get_settings
 from app.deps import get_db
 from app.errors import AppError, install_handlers
 from app.images import MAX_BYTES
-from app.logging_setup import event, request_id_var, setup_logging
+from app.logging_setup import event, record_operation, request_id_var, setup_logging
 from app.storage import SupabaseStore
 
 logger = logging.getLogger("app")
@@ -45,6 +45,7 @@ async def _supabase_keepalive(store):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    started = time.perf_counter()
     settings = get_settings()
     setup_logging()
     key = settings.gemini_api_key
@@ -66,7 +67,18 @@ async def lifespan(app: FastAPI):
         event(logger, "Supabase storage is not configured: record routes are disabled", logging.WARNING)
     if not settings.doctor_username or not settings.doctor_username.strip() or settings.doctor_password is None:
         event(logger, "Doctor credentials are not set: doctor login is disabled", logging.WARNING)
-    event(logger, "startup", environment=settings.environment)
+    startup_status = "success" if app.state.ai and app.state.db and settings.doctor_username else "failed"
+    record_operation(
+        "startup",
+        startup_status,
+        latency_ms=int((time.perf_counter() - started) * 1000),
+        llm_status="success" if app.state.ai else "failed",
+        db_status="success" if app.state.db else "failed",
+        email_status="not_configured",
+        route="/startup",
+        http_method="startup",
+    )
+    event(logger, "startup", environment=settings.environment, status=startup_status)
     yield
     if keepalive_task:
         keepalive_task.cancel()
@@ -78,6 +90,7 @@ async def lifespan(app: FastAPI):
         app.state.db.close()
     if app.state.ai:
         await app.state.ai.aclose()
+    record_operation("shutdown", "success", latency_ms=0, route="/shutdown", http_method="shutdown")
     event(logger, "shutdown")
 
 

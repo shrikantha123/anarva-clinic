@@ -32,6 +32,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { UserInfo, PhotoData, AnalysisResult } from '../types';
+import { apiFetch } from '../lib/api';
 import { AnarvaLogo } from './AnarvaLogo';
 import q3FrontalsImg from '../assets/images/q3_frontals_hairline_1790578848301.jpg';
 import q3MidsImg from '../assets/images/q3_mid_scalp_1790578883640.jpg';
@@ -43,6 +44,7 @@ interface ReportStepProps {
   analysis: AnalysisResult;
   saveError?: string | null;
   isSaving?: boolean;
+  reportCreatedAt: string | null;
   onRetrySave?: () => void;
   onRestart: () => void;
 }
@@ -53,6 +55,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
   analysis,
   saveError,
   isSaving = false,
+  reportCreatedAt,
   onRetrySave,
   onRestart,
 }) => {
@@ -63,9 +66,6 @@ export const ReportStep: React.FC<ReportStepProps> = ({
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   };
-  const [selectedSpecialist, setSelectedSpecialist] = useState(
-    'Dr. S. Mukherjee (Senior Trichologist)'
-  );
   const [selectedDate, setSelectedDate] = useState(localDate);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:30 AM - Morning');
   const [consultationMode, setConsultationMode] = useState('In-Clinic Visit (Indiranagar Center)');
@@ -76,13 +76,12 @@ export const ReportStep: React.FC<ReportStepProps> = ({
     setIsBooking(true);
     setBookingError(null);
     try {
-      const response = await fetch('/api/appointments', {
+      const response = await apiFetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patient_name: userInfo.name,
           patient_phone: userInfo.phone,
-          specialist: selectedSpecialist,
           date: selectedDate,
           time_slot: selectedTimeSlot,
           type: consultationMode,
@@ -297,9 +296,13 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Analysis Date</span>
-                  <span className="text-sm sm:text-base font-bold text-[#0F172A]">{currentDate}</span>
-                  <span className="text-xs text-[#475569]">Trichology Unit</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Report created</span>
+                  <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                    {reportCreatedAt
+                      ? new Date(reportCreatedAt).toLocaleString()
+                      : isSaving ? 'Saving report...' : currentDate}
+                  </span>
+                  <span className="text-xs text-[#475569]">Saved clinic record time</span>
                 </div>
 
                 <div className="col-span-2 sm:col-span-1 lg:justify-self-end">
@@ -1194,20 +1197,6 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   {bookingError}
                 </div>
               )}
-              <div>
-                <label className="text-xs font-semibold text-[#475569] block mb-1.5">
-                  Select Specialist
-                </label>
-                <select
-                  value={selectedSpecialist}
-                  onChange={(e) => setSelectedSpecialist(e.target.value)}
-                  className="w-full p-3 border border-[#E2E8F0] rounded-xl text-xs sm:text-sm font-medium text-[#0F172A] bg-white outline-none focus:border-[#15803D]"
-                >
-                  <option value="Dr. S. Mukherjee (Senior Trichologist)">Dr. S. Mukherjee (Senior Trichologist & Hair Transplant Specialist)</option>
-                  <option value="Dr. A. Sharma (Clinical Dermatologist)">Dr. A. Sharma (Clinical Dermatologist & Scalp Health)</option>
-                </select>
-              </div>
-
               <div>
                 <label className="text-xs font-semibold text-[#475569] block mb-1.5">
                   Preferred Date & Time Slot

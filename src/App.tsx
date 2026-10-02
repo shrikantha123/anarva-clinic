@@ -6,6 +6,7 @@ import { AnalysisStep } from './components/AnalysisStep';
 import { UserInfoStep } from './components/UserInfoStep';
 import { ReportStep } from './components/ReportStep';
 import { DoctorPortal } from './components/DoctorPortal';
+import { apiFetch } from './lib/api';
 import {
   QuizAnswers,
   PhotoData,
@@ -58,6 +59,7 @@ export default function App() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [reportCreatedAt, setReportCreatedAt] = useState<string | null>(null);
 
   // Assessment unique ID
   const [assessmentId, setAssessmentId] = useState<string>(
@@ -73,7 +75,7 @@ export default function App() {
     setSaveError(null);
     setIsSaving(true);
     try {
-      const response = await fetch('/api/patients', {
+      const response = await apiFetch('/api/patients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -92,6 +94,8 @@ export default function App() {
         }),
       });
       if (!response.ok) throw new Error('assessment_save_failed');
+      const result = await response.json();
+      setReportCreatedAt(result.record?.created_at ?? new Date().toISOString());
     } catch {
       setSaveError('Your report is ready, but we could not save it to clinic records. Please retry the save.');
     } finally {
@@ -131,6 +135,7 @@ export default function App() {
   const handleUserInfoComplete = (info: UserInfo) => {
     if (!analysis) return;
     setUserInfo(info);
+    setReportCreatedAt(new Date().toISOString());
     setAnalysis((prev) => (prev ? { ...prev, assessmentId } : prev));
     setSaveError(null);
     // 1. Immediately display patient report
@@ -146,6 +151,7 @@ export default function App() {
     setPhotos({ front: null, mid: null, crown: null });
     setAnalysis(null);
     setSaveError(null);
+    setReportCreatedAt(null);
     setCurrentStep('quiz');
   };
 
@@ -191,6 +197,7 @@ export default function App() {
             analysis={analysis}
             saveError={saveError}
             isSaving={isSaving}
+            reportCreatedAt={reportCreatedAt}
             onRetrySave={() => {
               if (analysis) void savePatientAssessment(userInfo, photos, answers, analysis);
             }}

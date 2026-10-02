@@ -4,6 +4,8 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const apiTarget = process.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
   return {
     base: '/hair-loss-assessment/',
     plugins: [react(), tailwindcss()],
@@ -14,7 +16,8 @@ export default defineConfig(() => {
     },
     server: {
       // In dev, the FastAPI backend (npm start / uvicorn) answers API calls.
-      proxy: { '/api': 'http://localhost:3000', '/health': 'http://localhost:3000' },
+      // In production, use a separate API host and set VITE_API_BASE_URL.
+      proxy: { '/api': apiTarget, '/health': apiTarget },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

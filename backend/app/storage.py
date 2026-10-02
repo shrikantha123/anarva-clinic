@@ -7,7 +7,7 @@ import httpx
 
 from app import db
 from app.errors import AppError
-from app.logging_setup import event
+from app.logging_setup import event, record_operation
 
 logger = logging.getLogger("app.storage")
 
@@ -59,6 +59,7 @@ class SupabaseStore:
             raise ValueError("Unknown record table")
         headers = {"Prefer": prefer} if prefer else None
         started = time.perf_counter()
+        latency_ms = int((time.perf_counter() - started) * 1000)
         try:
             response = self._client.request(
                 method, table, params=params, json=record, headers=headers
@@ -73,7 +74,16 @@ class SupabaseStore:
                 method=method,
                 table=table,
                 reason=type(exc).__name__,
-                ms=int((time.perf_counter() - started) * 1000),
+                ms=latency_ms,
+            )
+            record_operation(
+                "database",
+                "failed",
+                latency_ms=latency_ms,
+                db_status="failed",
+                route=f"/{table}",
+                http_method=method,
+                error_details=f"{type(exc).__name__}: {exc}",
             )
             raise AppError(503, "Database service is unavailable") from None
         event(
@@ -82,7 +92,15 @@ class SupabaseStore:
             method=method,
             table=table,
             rows=len(rows),
-            ms=int((time.perf_counter() - started) * 1000),
+            ms=latency_ms,
+        )
+        record_operation(
+            "database",
+            "success",
+            latency_ms=latency_ms,
+            db_status="success",
+            route=f"/{table}",
+            http_method=method,
         )
         return rows
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 PATIENTS = "patient_assessments"
 APPOINTMENTS = "appointments"
+OPERATIONAL_LOGS = "operational_logs"
 JSON_COLUMNS = {"quiz_answers", "photo_urls", "analysis"}
 
 SCHEMA = f"""
@@ -18,10 +19,21 @@ CREATE TABLE IF NOT EXISTS {APPOINTMENTS} (
     patient_phone TEXT NOT NULL, specialist TEXT NOT NULL, date TEXT NOT NULL, time_slot TEXT NOT NULL,
     type TEXT NOT NULL, notes TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS {OPERATIONAL_LOGS} (
+    id TEXT PRIMARY KEY, created_at TEXT NOT NULL, request_id TEXT NOT NULL,
+    event_type TEXT NOT NULL, operation TEXT NOT NULL, status TEXT NOT NULL,
+    route TEXT NOT NULL DEFAULT '', http_method TEXT NOT NULL DEFAULT '',
+    http_status INTEGER, latency_ms INTEGER, resource_id TEXT, model TEXT,
+    prompt_tokens INTEGER, output_tokens INTEGER, estimated_cost_usd REAL,
+    llm_status TEXT DEFAULT '', db_status TEXT DEFAULT '', email_status TEXT DEFAULT '',
+    error_details TEXT
+);
 CREATE INDEX IF NOT EXISTS patient_assessments_created_at_idx
     ON {PATIENTS} (created_at DESC);
 CREATE INDEX IF NOT EXISTS appointments_created_at_idx
     ON {APPOINTMENTS} (created_at DESC);
+CREATE INDEX IF NOT EXISTS operational_logs_created_at_idx
+    ON {OPERATIONAL_LOGS} (created_at DESC);
 """
 
 
@@ -43,7 +55,10 @@ def init_db(path: Path) -> None:
 
 
 def _to_dict(row: sqlite3.Row) -> dict:
-    return {k: json.loads(row[k]) if k in JSON_COLUMNS else row[k] for k in row.keys()}
+    data = {k: json.loads(row[k]) if k in JSON_COLUMNS else row[k] for k in row.keys()}
+    if "estimated_cost_usd" in data and "llm_cost_usd" not in data:
+        data["llm_cost_usd"] = data["estimated_cost_usd"]
+    return data
 
 
 # Table and column names below are internal constants, never user input.
@@ -56,6 +71,15 @@ def insert(conn: sqlite3.Connection, table: str, record: dict) -> None:
 
 def list_all(conn: sqlite3.Connection, table: str) -> list[dict]:
     rows = conn.execute(f"SELECT * FROM {table} ORDER BY created_at DESC, rowid DESC").fetchall()
+    return [_to_dict(r) for r in rows]
+
+
+def list_recent_logs(conn: sqlite3.Connection, limit: int = 200) -> list[dict]:
+    bounded_limit = max(1, min(int(limit), 500))
+    rows = conn.execute(
+        f"SELECT * FROM {OPERATIONAL_LOGS} ORDER BY created_at DESC, rowid DESC LIMIT ?",
+        (bounded_limit,),
+    ).fetchall()
     return [_to_dict(r) for r in rows]
 
 
@@ -87,6 +111,9 @@ class SQLiteStore:
 
     def list_all(self, table: str) -> list[dict]:
         return list_all(self._conn, table)
+
+    def list_recent_logs(self, limit: int = 200) -> list[dict]:
+        return list_recent_logs(self._conn, limit)
 
     def set_status(self, table: str, status: str, column: str, value: str) -> bool:
         if column not in {"patient_id", "id", "appointment_id"}:

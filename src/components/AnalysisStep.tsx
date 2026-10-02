@@ -17,6 +17,7 @@ import {
   AnalyzeApiResponse,
   PhotoValidationResult,
 } from '../types';
+import { apiFetch } from '../lib/api';
 import { sound } from '../utils/audio';
 
 interface AnalysisStepProps {
@@ -143,7 +144,7 @@ export const AnalysisStep: React.FC<AnalysisStepProps> = ({
     // Call server Gemini API
     const runAnalysis = async () => {
       try {
-        const response = await fetch('/api/analyze', {
+        const response = await apiFetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

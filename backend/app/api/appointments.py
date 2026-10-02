@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from app import db as store
 from app.deps import DB, DoctorOnly
@@ -9,14 +9,16 @@ from app.schemas.records import (
     AppointmentStatusIn,
     AppointmentStatusUpdated,
 )
-from app.services import records
+from app.services import email_notifications, records
 
 router = APIRouter(tags=["appointments"])
 
 
 @router.post("/appointments", response_model=AppointmentBooked)
-def book(body: AppointmentIn, db: DB):
-    return {"appointment": records.book_appointment(db, body)}
+def book(body: AppointmentIn, background_tasks: BackgroundTasks, db: DB):
+    appointment = records.book_appointment(db, body)
+    background_tasks.add_task(email_notifications.notify_appointment_booked, appointment)
+    return {"appointment": appointment}
 
 
 @router.get("/appointments", response_model=AppointmentList, dependencies=[DoctorOnly])

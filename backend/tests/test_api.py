@@ -11,6 +11,8 @@ from PIL import Image
 import httpx
 
 from app import main
+from app.api import appointments as appointments_api
+from app.api import patients as patients_api
 from app.config import Settings
 from app.deps import get_db
 from app.storage import SupabaseStore
@@ -184,6 +186,107 @@ def test_patient_save_and_doctor_list(client):
     assert listed.status_code == 200
     ids = [row["patient_id"] for row in listed.json()["assessments"]]
     assert "ANR-9999-26" in ids
+
+
+def test_report_notification_only_sends_for_new_record(client, monkeypatch):
+    notifications = []
+    monkeypatch.setattr(
+        patients_api.email_notifications,
+        "notify_report_saved",
+        notifications.append,
+    )
+    payload = {
+        "patient_id": "ANR-8888-26",
+        "name": "Notification User",
+        "phone": "12345",
+        "gender": "",
+        "address": "",
+        "quiz_answers": QUIZ,
+        "photo_urls": _photos(),
+        "analysis": {"norwoodStage": 2, "stageName": "Stage 2", "overallScore": 70},
+    }
+
+    first = client.post("/api/patients", json=payload)
+    duplicate = client.post("/api/patients", json=payload)
+
+    assert first.status_code == duplicate.status_code == 200
+    assert len(notifications) == 1
+    assert notifications[0]["patient_id"] == "ANR-8888-26"
+
+
+def test_appointment_notification_contains_booking_details(client, monkeypatch):
+    notifications = []
+    monkeypatch.setattr(
+        appointments_api.email_notifications,
+        "notify_appointment_booked",
+        notifications.append,
+    )
+    future_date = (dt.date.today() + dt.timedelta(days=30)).isoformat()
+
+    response = client.post(
+        "/api/appointments",
+        json={
+            "patient_name": "Notification User",
+            "patient_phone": "12345",
+            "date": future_date,
+            "time_slot": "10:30 AM - Morning",
+            "type": "In-Clinic Visit",
+        },
+    )
+
+    assert response.status_code == 200
+    assert len(notifications) == 1
+    assert notifications[0]["patient_name"] == "Notification User"
+    assert notifications[0]["time_slot"] == "10:30 AM - Morning"
+
+
+def test_report_email_is_short_and_excludes_photo_data(monkeypatch):
+    from app.services import email_notifications
+
+    sent = []
+    monkeypatch.setattr(email_notifications, "_send_email", lambda subject, body: sent.append((subject, body)))
+
+    email_notifications.notify_report_saved(
+        {
+            "patient_id": "ANR-8888-26",
+            "name": "Notification User",
+            "phone": "12345",
+            "created_at": "2026-10-01T09:00:00Z",
+            "photo_urls": {"front": "data:image/jpeg;base64,private-image-data"},
+            "analysis": {"stageName": "Stage 2", "overallScore": 70},
+        }
+    )
+
+    assert len(sent) == 1
+
+
+def test_doctor_logs_endpoint_returns_system_events(client):
+    from app.logging_setup import record_operation
+
+    record_operation(
+        operation="startup",
+        status="success",
+        latency_ms=124,
+        llm_cost_usd=0.0045,
+        llm_status="success",
+        db_status="success",
+        email_status="success",
+        error_details=None,
+    )
+
+    login = client.post(
+        "/api/doctor/login",
+        json={"username": "doctor@anarvaclinic.com", "password": "pytest-doctor-secret"},
+    )
+    assert login.status_code == 200
+
+    response = client.get("/api/doctor/logs")
+    assert response.status_code == 200
+    logs = response.json()["logs"]
+    assert logs[0]["operation"] == "startup"
+    assert logs[0]["status"] == "success"
+    assert logs[0]["latency_ms"] == 124
+    assert logs[0]["llm_cost_usd"] == 0.0045
 
 
 def test_doctor_login_invalid(client):

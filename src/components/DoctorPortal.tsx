@@ -27,6 +27,7 @@ import {
   PhotoData,
   AnalysisResult,
 } from '../types';
+import { apiFetch } from '../lib/api';
 import { AnarvaLogo } from './AnarvaLogo';
 import { ReportStep } from './ReportStep';
 import { sound } from '../utils/audio';
@@ -38,18 +39,25 @@ export const DoctorPortal: React.FC = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Tab: 'patients' or 'appointments'
-  const [activeTab, setActiveTab] = useState<'patients' | 'appointments'>('patients');
+  // Tab: 'patients', 'appointments', or 'logs'
+  const [activeTab, setActiveTab] = useState<'patients' | 'appointments' | 'logs'>(() =>
+    new URLSearchParams(window.location.search).get('tab') === 'appointments'
+      ? 'appointments'
+      : 'patients'
+  );
 
   // Assessments & Appointments Data
   const [assessments, setAssessments] = useState<PatientAssessmentRecord[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
+  const [systemLogs, setSystemLogs] = useState<any[]>([]);
   
   // Patient whose exact report is currently opened
   const [viewingPatient, setViewingPatient] = useState<PatientAssessmentRecord | null>(null);
   
   const [statusUpdating, setStatusUpdating] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(() =>
+    new URLSearchParams(window.location.search).get('appointment_id') || ''
+  );
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -58,7 +66,7 @@ export const DoctorPortal: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/doctor/login', {
+      const res = await apiFetch('/api/doctor/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -81,10 +89,15 @@ export const DoctorPortal: React.FC = () => {
 
   const loadAssessments = async () => {
     try {
-      const res = await fetch('/api/doctor/assessments');
+      const res = await apiFetch('/api/doctor/assessments');
       const data = await res.json();
       if (data.assessments) {
         setAssessments(data.assessments);
+        const patientId = new URLSearchParams(window.location.search).get('patient_id');
+        const requestedPatient = data.assessments.find(
+          (patient: PatientAssessmentRecord) => patient.patient_id === patientId
+        );
+        if (requestedPatient) setViewingPatient(requestedPatient);
       }
     } catch (err) {
       console.error('Error fetching assessments:', err);
@@ -93,7 +106,7 @@ export const DoctorPortal: React.FC = () => {
 
   const loadAppointments = async () => {
     try {
-      const res = await fetch('/api/appointments');
+      const res = await apiFetch('/api/appointments');
       const data = await res.json();
       if (data.appointments) {
         setAppointments(data.appointments);
@@ -103,10 +116,23 @@ export const DoctorPortal: React.FC = () => {
     }
   };
 
+  const loadSystemLogs = async () => {
+    try {
+      const res = await apiFetch('/api/doctor/logs');
+      const data = await res.json();
+      if (Array.isArray(data.logs)) {
+        setSystemLogs(data.logs);
+      }
+    } catch (err) {
+      console.error('Error fetching system logs:', err);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       loadAssessments();
       loadAppointments();
+      loadSystemLogs();
     }
   }, [isAuthenticated]);
 
@@ -115,7 +141,7 @@ export const DoctorPortal: React.FC = () => {
     sound.playSelect();
 
     try {
-      const res = await fetch(`/api/doctor/assessments/${patientId}/status`, {
+      const res = await apiFetch(`/api/doctor/assessments/${patientId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -141,7 +167,7 @@ export const DoctorPortal: React.FC = () => {
   const handleAppointmentStatusChange = async (aptId: string, newStatus: any) => {
     sound.playSelect();
     try {
-      const res = await fetch(`/api/appointments/${aptId}/status`, {
+      const res = await apiFetch(`/api/appointments/${aptId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -249,6 +275,7 @@ export const DoctorPortal: React.FC = () => {
             userInfo={patientUserInfo}
             photos={patientPhotos}
             analysis={patientAnalysis}
+            reportCreatedAt={viewingPatient.created_at}
             onRestart={() => setViewingPatient(null)}
           />
         </div>
@@ -349,6 +376,7 @@ export const DoctorPortal: React.FC = () => {
             onClick={() => {
               loadAssessments();
               loadAppointments();
+              loadSystemLogs();
             }}
             className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
             title="Refresh Data"
@@ -403,6 +431,22 @@ export const DoctorPortal: React.FC = () => {
             >
               <Calendar className="w-4 h-4" />
               <span>Appointments Database ({appointments.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playSelect();
+                setActiveTab('logs');
+              }}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'logs'
+                  ? 'bg-[#B91C1C] text-white shadow-md shadow-[#B91C1C]/20'
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>System Logs</span>
             </button>
           </div>
 
@@ -561,11 +605,17 @@ export const DoctorPortal: React.FC = () => {
                         <span className="font-semibold">{apt.patient_phone}</span>
                       </div>
                       <div className="flex items-center justify-between text-white/90">
-                        <span className="text-white/60">Date & Slot:</span>
+                        <span className="text-white/60">Appointment:</span>
                         <span className="font-semibold text-[#4ADE80]">{apt.date} • {apt.time_slot}</span>
                       </div>
                       <div className="flex items-center justify-between text-white/90">
-                        <span className="text-white/60">Specialist:</span>
+                        <span className="text-white/60">Booked at:</span>
+                        <span className="font-semibold">
+                          {new Date(apt.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-white/90">
+                        <span className="text-white/60">Care team:</span>
                         <span className="font-semibold truncate max-w-[200px]">{apt.specialist}</span>
                       </div>
                       <div className="flex items-center justify-between text-white/90">
@@ -598,6 +648,76 @@ export const DoctorPortal: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="bg-[#121B1E] border border-white/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
+              <div>
+                <h3 className="text-sm font-bold text-white">Operational Log Monitor</h3>
+                <p className="text-[11px] text-white/60">Date, time, operation, startup, LLM, database, email, latency and failure details</p>
+              </div>
+              <button
+                type="button"
+                onClick={loadSystemLogs}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 text-[11px] font-bold cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Refresh
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-xs text-white/80">
+                <thead className="bg-[#090D0F] text-white/70">
+                  <tr>
+                    <th className="px-3 py-2 font-bold">Date</th>
+                    <th className="px-3 py-2 font-bold">Time</th>
+                    <th className="px-3 py-2 font-bold">Operation</th>
+                    <th className="px-3 py-2 font-bold">Status</th>
+                    <th className="px-3 py-2 font-bold">LLM</th>
+                    <th className="px-3 py-2 font-bold">Cost</th>
+                    <th className="px-3 py-2 font-bold">Latency</th>
+                    <th className="px-3 py-2 font-bold">DB</th>
+                    <th className="px-3 py-2 font-bold">Email</th>
+                    <th className="px-3 py-2 font-bold">Error Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {systemLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="px-3 py-8 text-center text-white/50">No system events recorded yet.</td>
+                    </tr>
+                  ) : (
+                    systemLogs.map((log) => {
+                      const createdAt = log.created_at ? new Date(log.created_at) : new Date();
+                      const isSuccess = log.status === 'success';
+                      return (
+                        <tr key={log.id} className="border-t border-white/10 align-top">
+                          <td className="px-3 py-2 whitespace-nowrap">{createdAt.toLocaleDateString()}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">{createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                          <td className="px-3 py-2 whitespace-nowrap font-semibold text-white">{log.operation || '—'}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              isSuccess ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/15 text-red-300 border border-red-500/30'
+                            }`}>
+                              {log.status || 'unknown'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">{log.llm_status || '—'}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">${Number(log.estimated_cost_usd ?? 0).toFixed(6)}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">{log.latency_ms ?? '—'} ms</td>
+                          <td className="px-3 py-2 whitespace-nowrap">{log.db_status || '—'}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">{log.email_status || '—'}</td>
+                          <td className="px-3 py-2 max-w-[260px] break-words text-white/70">{log.error_details || '—'}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

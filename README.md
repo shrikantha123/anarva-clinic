@@ -1,71 +1,104 @@
-# Anarva Clinic — website + AI hair loss analysis
+docker compose up --build -d
+# Anarva Clinic — AI hair-loss assessment platform
 
-Single app that serves two things:
+This project serves a clinic marketing site plus an AI-driven hair-loss assessment workflow.
 
-| Path | Content |
+| Area | Purpose |
 | --- | --- |
-| `/` | Clinic marketing website (static HTML/CSS/JS in `site/`) |
-| `/hair-loss-assessment/` | React + Vite AI hair loss analysis app (`src/`) |
-| `/api/*`, `/health` | FastAPI + Gemini backend (`backend/`) |
+| `/` | Marketing website and landing page |
+| `/hair-loss-assessment/` | Vite + React patient assessment UI |
+| `/api/*` | FastAPI backend for AI analysis, patient storage, and doctor portal |
 
-The "Hair Loss Assessment" button on the clinic homepage links to
-`/hair-loss-assessment/`, which loads the React analysis flow
-(quiz → photos → analysis → report → doctor portal).
+The frontend and backend are now structured for independent deployment so they can run on different cloud services without sharing runtime secrets or build artifacts.
 
-## Run locally
+## Recommended deployment structure
+
+```text
+repo/
+├── apps/
+│   ├── frontend/      # React app for clinic UI and assessment flow
+│   └── backend/       # FastAPI app for AI + records + notifications
+├── site/              # Static marketing pages
+├── src/               # Current frontend source kept compatible with Vite
+├── backend/           # Existing FastAPI service kept working during transition
+├── supabase/           # SQL schema and RLS setup
+├── legacy/             # Reference prototypes
+├── docs/               # deployment notes and operational docs
+├── .env.example
+├── Dockerfile
+├── docker-compose.yml
+├── package.json
+└── README.md
+```
+
+This is the safest split for a cloud deployment model:
+
+- Frontend: static hosting such as Vercel or Netlify
+- Backend: container hosting such as Render, Railway, Azure App Service, or Fly.io
+- Database: Supabase managed database
+
+## Local development
 
 Prerequisites: Node.js 20+, Python 3.11+
 
 ```bash
 npm install
 pip install -r backend/requirements.txt
-cp .env.example .env      # set GEMINI_API_KEY and DOCTOR_PASSWORD
-npm run build             # React app -> dist/
-npm start                 # http://localhost:3000 (site, app and API)
+cp .env.example .env
+npm run build
+npm start
 ```
 
-Frontend development with hot reload: run `npm start` in one terminal and `npm run dev`
-in another, then open http://localhost:5173/hair-loss-assessment/ (`/api` is proxied).
-
-Tests: `npm run test:backend` (or `pip install -r backend/requirements-dev.txt && cd backend && python -m pytest`)
-
-## Deploy
-
-| Artifact | Purpose |
-| --- | --- |
-| `Dockerfile` | Multi-stage build: Vite → `dist/`, then Python 3.12 + uvicorn |
-| `docker-compose.yml` | Single service on port 3000, with database storage in Supabase |
-| `.env` | Secrets (never commit); mount via `env_file` in Compose |
+For hot-refresh frontend work, run:
 
 ```bash
-cp .env.example .env   # set GEMINI_API_KEY, DOCTOR_PASSWORD, SECRET_KEY
-npm run build
-docker compose up --build -d
+npm run dev
 ```
 
-Production checklist: `ENVIRONMENT=production`, strong `SECRET_KEY`, `DOCTOR_USERNAME`, and `DOCTOR_PASSWORD`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, HTTPS in front of the app. Apply `supabase/schema.sql` to create the tables with RLS enabled; the service-role key belongs only in the backend environment.
+Then open http://localhost:5173/hair-loss-assessment/ and keep the backend at http://localhost:3000.
 
-## Repository layout
+## Frontend/backend split
 
+For separate deployments, set the frontend environment variable:
+
+```bash
+VITE_API_BASE_URL=https://your-backend-url.example.com
 ```
-merged/
-├── site/                 # Marketing site (/)
-├── src/                  # React hair-loss assessment UI
-├── dist/                 # Vite build output (generated)
-├── backend/
-│   ├── app/              # FastAPI application
-│   ├── tests/            # Pytest regression suite
-├── legacy/               # Old prototype (reference only)
-├── supabase/             # Database schema and RLS setup
-├── Dockerfile
-└── docker-compose.yml
+
+The browser will use that value instead of assuming the API lives on the same origin. The app now resolves API calls through a shared helper in `src/lib/api.ts`.
+
+## Deployment checklist
+
+- `ENVIRONMENT=production`
+- strong `SECRET_KEY`
+- `DOCTOR_USERNAME` and `DOCTOR_PASSWORD`
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+- `GEMINI_API_KEY`
+- HTTPS enabled in front of both services
+
+Apply `supabase/schema.sql` to create the tables with RLS enabled. Keep the service-role key on the backend only.
+
+## Tests
+
+```bash
+npm run test:backend
+# or
+cd backend && python -m pytest
+```
+
+## GitHub push
+
+Once the repo is ready, push the branch to the GitHub remote already configured for this project:
+
+```bash
+git add .
+git commit -m "Prepare split frontend and backend deployment structure"
+git push origin main
 ```
 
 ## Backend layout (`backend/app`)
 
-`api/` routes · `schemas/` Pydantic models (the AI contract lives in `schemas/analysis.py`) ·
-`services/` business logic · `ai/` prompt, Gemini client, retry/validation · `images.py` upload
-validation · `storage.py` Supabase persistence · `config.py` settings · `errors.py` error handling.
+`api/` routes · `schemas/` Pydantic models · `services/` business logic · `ai/` prompt and Gemini client · `storage.py` Supabase persistence · `config.py` settings · `errors.py` error handling.
 
 ## Environment
 
@@ -73,5 +106,4 @@ See `.env.example`. Patient assessments and appointments are stored in Supabase;
 
 ## legacy/
 
-Earlier vanilla-JS prototype of the analysis app plus its Python API tests and
-sample database, kept for reference. It is not served by `server.ts`.
+Earlier vanilla-JS prototype of the analysis app plus its Python API tests and sample database, kept for reference.

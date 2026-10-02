@@ -21,7 +21,7 @@ import { sound } from '../utils/audio';
 // Images for Q3 matching user's uploaded images
 import q3FrontalsImg from '../assets/images/q3_frontals_hairline_1790578848301.jpg';
 import q3TempleImg from '../assets/images/q3_temple_recession_1790578857963.jpg';
-import q3MidsImg from '../assets/images/q3_mid_scalp_1790578883640.jpg';
+import q3MidsImg from '../assets/images/midds - Copy.jpg';
 import q3CrownImg from '../assets/images/q3_crown_thinning_1790578871838.jpg';
 import q3DiffuseImg from '../assets/images/q3_diffuse_thinning_1790578928292.jpg';
 import q3PatchyImg from '../assets/images/patchy_hair_loss_1790577865155.jpg';
@@ -29,6 +29,7 @@ import healthyScalpImg from '../assets/images/healthy_scalp_normal_1790577886948
 import fatherImg from '../assets/images/father.png';
 import motherImg from '../assets/images/mother (1).png';
 import familyImg from '../assets/images/family.png';
+import uncleImg from '../assets/images/uncle.png';
 
 // Distinct Unique Clinical Images for Q7
 import q7DandruffImg from '../assets/images/scalp_dandruff_flaking_1790577831902.jpg';
@@ -616,7 +617,7 @@ export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }
                   { id: 'father', label: 'Father', role: 'Immediate paternal', img: fatherImg },
                   { id: 'mother', label: 'Mother', role: 'Immediate maternal', img: motherImg },
                   { id: 'multiple', label: 'Multiple family members', role: 'Strong genetic marker', img: familyImg },
-                    { id: 'uncle', label: 'Uncle', role: 'Extended family', img: fatherImg },
+                    { id: 'uncle', label: 'Uncle', role: 'Extended family', img: uncleImg },
                     { id: 'none', label: 'No family history', role: 'No hereditary signs', img: healthyScalpImg },
                 ].map((item) => {
                   const isSelected = answers.q5_family.includes(item.id);

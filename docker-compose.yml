@@ -5,6 +5,9 @@ services:
       - "3000:3000"
     env_file:
       - .env
+      - .env.gmail
     environment:
       ENVIRONMENT: production
+    volumes:
+      - ./secrets:/app/secrets:ro
     restart: unless-stopped
