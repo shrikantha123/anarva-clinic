@@ -5,6 +5,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from google import genai
 from starlette.exceptions import HTTPException
@@ -164,6 +165,24 @@ def create_app() -> FastAPI:
         docs_url=None if hidden else "/docs", redoc_url=None, openapi_url=None if hidden else "/openapi.json",
     )
     app.state.db = None
+
+    # CORS Middleware Configuration for Cloud Run
+    # Allow requests from your deployed frontend Cloud Run URL
+    # For local development, you can add "http://localhost:5173" to allowed_origins
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://YOUR_FRONTEND_CLOUD_RUN_URL.cloudrun.app",  # Replace with your actual frontend URL
+            "http://localhost:5173",  # For local development
+            "http://localhost:3000",  # For local development
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],  # Allow all HTTP methods
+        allow_headers=["*"],  # Allow all headers
+        expose_headers=["*"],  # Expose all headers to frontend
+        max_age=600,  # Cache preflight requests for 10 minutes
+    )
+
     app.middleware("http")(request_log)
     app.add_middleware(BodyLimit, max_bytes=MAX_BODY_BYTES)
     install_handlers(app)
