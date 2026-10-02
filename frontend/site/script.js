@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch('/api/appointments', {
+                const response = await fetch('https://anarva-clinic.onrender.com/api/appointments',{
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
