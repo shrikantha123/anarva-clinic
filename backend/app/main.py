@@ -179,8 +179,9 @@ def create_app() -> FastAPI:
         allow_origins=[
             "https://YOUR_FRONTEND_RENDER_URL.onrender.com",  # Replace with your actual frontend URL
             "https://YOUR_BACKEND_RENDER_URL.onrender.com",   # Replace with your actual backend URL
-            "http://localhost:5173",  # For local development
-            "http://localhost:3000",  # For local development
+            "http://localhost:5173",  # For local development (Vite dev server)
+            "http://localhost:3000",  # For local development (Docker compose)
+            "http://localhost:8080",  # For local development (Docker compose frontend)
         ],
         allow_credentials=True,
         allow_methods=["*"],  # Allow all HTTP methods

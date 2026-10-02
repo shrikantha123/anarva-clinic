@@ -14,7 +14,7 @@ MAX_OUTPUT_TOKENS = 4096
 THINKING_BUDGET = 2048
 
 # Used when the configured model returns capacity errors (503).
-MODEL_FALLBACKS = ("gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.8-flash")
+MODEL_FALLBACKS = ("gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash")
 
 
 class Gemini:

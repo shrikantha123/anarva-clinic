@@ -16,7 +16,7 @@ from app.config import APP_BASE, DIST_DIR, ROOT
 MAX_BYTES = 10 * 1024 * 1024
 MAX_PIXELS = 60_000_000
 MIN_SIDE = 200
-MAX_SIDE = 1600
+MAX_SIDE = 1200  # Reduced for better performance
 FORMATS = {"JPEG", "MPO", "PNG", "WEBP"}
 DATA_URI = re.compile(r"^data:image/[\w.+-]+;base64,", re.IGNORECASE)
 
