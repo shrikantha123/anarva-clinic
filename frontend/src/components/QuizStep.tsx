@@ -1,4 +1,225 @@
-return (
+import React, { useState } from 'react';
+import {
+  Clock,
+  TrendingUp,
+  MapPin,
+  Droplets,
+  Users,
+  Calendar,
+  HeartPulse,
+  Pill,
+  ChevronRight,
+  ChevronLeft,
+  Check,
+  AlertCircle,
+} from 'lucide-react';
+import { QuizAnswers } from '../types';
+import { sound } from '../utils/audio';
+
+import q3FrontalsImg from '../assets/images/q3_frontals_hairline_1790578848301.jpg';
+import q3TempleImg from '../assets/images/q3_temple_recession_1790578857963.jpg';
+import q3CrownImg from '../assets/images/q3_crown_thinning_1790578871838.jpg';
+import q3MidsImg from '../assets/images/q3_mid_scalp_1790578883640.jpg';
+import q3DiffuseImg from '../assets/images/q3_diffuse_thinning_1790578928292.jpg';
+import q3PatchyImg from '../assets/images/patchy_hair_loss_1790577865155.jpg';
+
+import fatherImg from '../assets/images/father.png';
+import motherImg from '../assets/images/mother (1).png';
+import familyImg from '../assets/images/family.png';
+import uncleImg from '../assets/images/uncle.png';
+import healthyScalpImg from '../assets/images/healthy_scalp_normal_1790577886948.jpg';
+
+import q7DandruffImg from '../assets/images/scalp_dandruff_flaking_1790577831902.jpg';
+import q7ItchingImg from '../assets/images/q7_itching_irritation_1790579784356.jpg';
+import q7RednessImg from '../assets/images/q7_redness_erythema_1790579794827.jpg';
+import q7BurningImg from '../assets/images/q7_burning_scalp_1790579810907.jpg';
+import q7PainImg from '../assets/images/q7_pain_tenderness_1790579821092.jpg';
+import q7OilinessImg from '../assets/images/scalp_oily_greasy_1790577875798.jpg';
+
+interface QuizStepProps {
+  initialAnswers: QuizAnswers;
+  onComplete: (answers: QuizAnswers) => void;
+}
+
+export const QuizStep: React.FC<QuizStepProps> = ({ initialAnswers, onComplete }) => {
+  const [currentQ, setCurrentQ] = useState(1);
+  const [answers, setAnswers] = useState<QuizAnswers>(initialAnswers);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [q4Interacted, setQ4Interacted] = useState(initialAnswers.q4_shedding > 0);
+
+  const toggleQ3Location = (id: string) => {
+    sound.playSelect();
+    setAnswers((prev) => {
+      const locs = prev.q3_locations.includes(id)
+        ? prev.q3_locations.filter((x) => x !== id)
+        : [...prev.q3_locations, id];
+      return { ...prev, q3_locations: locs };
+    });
+    setErrorMsg(null);
+  };
+
+  const toggleQ5Family = (id: string) => {
+    sound.playSelect();
+    setAnswers((prev) => {
+      if (id === 'none') {
+        const isSelected = prev.q5_family.includes('none');
+        return { ...prev, q5_family: isSelected ? [] : ['none'] };
+      }
+      const cleaned = prev.q5_family.filter((x) => x !== 'none');
+      const updated = cleaned.includes(id)
+        ? cleaned.filter((x) => x !== id)
+        : [...cleaned, id];
+      return { ...prev, q5_family: updated };
+    });
+    setErrorMsg(null);
+  };
+
+  const toggleQ6Event = (id: string) => {
+    sound.playSelect();
+    setAnswers((prev) => {
+      if (id === 'none6' || id === 'unsure6') {
+        const isSelected = prev.q6_events.includes(id);
+        return { ...prev, q6_events: isSelected ? [] : [id], q6_timing: '' };
+      }
+      const cleaned = prev.q6_events.filter((x) => x !== 'none6' && x !== 'unsure6');
+      const updated = cleaned.includes(id)
+        ? cleaned.filter((x) => x !== id)
+        : [...cleaned, id];
+      const hasEvents = updated.length > 0;
+      return { ...prev, q6_events: updated, q6_timing: hasEvents ? prev.q6_timing : '' };
+    });
+    setErrorMsg(null);
+  };
+
+  const toggleQ7Symptom = (id: string) => {
+    sound.playSelect();
+    setAnswers((prev) => {
+      if (id === 'none7') {
+        const isSelected = prev.q7_symptoms.includes('none7');
+        return { ...prev, q7_symptoms: isSelected ? [] : ['none7'] };
+      }
+      const cleaned = prev.q7_symptoms.filter((x) => x !== 'none7');
+      const updated = cleaned.includes(id)
+        ? cleaned.filter((x) => x !== id)
+        : [...cleaned, id];
+      return { ...prev, q7_symptoms: updated };
+    });
+    setErrorMsg(null);
+  };
+
+  const toggleQ8Treatment = (id: string) => {
+    sound.playSelect();
+    setAnswers((prev) => {
+      if (id === 'none8') {
+        const isSelected = prev.q8_treatments.includes('none8');
+        return { ...prev, q8_treatments: isSelected ? [] : ['none8'], q8_duration: '' };
+      }
+      const cleaned = prev.q8_treatments.filter((x) => x !== 'none8');
+      const updated = cleaned.includes(id)
+        ? cleaned.filter((x) => x !== id)
+        : [...cleaned, id];
+      const hasTreatments = updated.length > 0;
+      return { ...prev, q8_treatments: updated, q8_duration: hasTreatments ? prev.q8_duration : '' };
+    });
+    setErrorMsg(null);
+  };
+
+  const validateCurrentQuestion = (): boolean => {
+    switch (currentQ) {
+      case 1:
+        if (!answers.q1_onset) {
+          setErrorMsg('Please select when you first noticed hair loss.');
+          return false;
+        }
+        break;
+      case 2:
+        if (!answers.q2_progression) {
+          setErrorMsg('Please select how your hair loss has progressed.');
+          return false;
+        }
+        break;
+      case 3:
+        if (answers.q3_locations.length === 0) {
+          setErrorMsg('Please select at least one affected scalp area.');
+          return false;
+        }
+        break;
+      case 4:
+        if (!q4Interacted) {
+          setErrorMsg('Please select a hair shedding level.');
+          return false;
+        }
+        break;
+      case 5:
+        if (answers.q5_family.length === 0) {
+          setErrorMsg('Please select family history or choose "No family history".');
+          return false;
+        }
+        break;
+      case 6:
+        if (answers.q6_events.length === 0) {
+          setErrorMsg('Please select any recent triggers or choose "None of these".');
+          return false;
+        }
+        if (hasQ6Triggers && !answers.q6_timing) {
+          setErrorMsg('Please select approximately when this occurred.');
+          return false;
+        }
+        break;
+      case 7:
+        if (answers.q7_symptoms.length === 0) {
+          setErrorMsg('Please select scalp symptoms or choose "No symptoms".');
+          return false;
+        }
+        break;
+      case 8:
+        if (answers.q8_treatments.length === 0) {
+          setErrorMsg('Please select prior treatments or choose "No previous treatment".');
+          return false;
+        }
+        if (hasQ8Treatments && !answers.q8_duration) {
+          setErrorMsg('Please select how long you used the treatment.');
+          return false;
+        }
+        break;
+    }
+    setErrorMsg(null);
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateCurrentQuestion()) {
+      sound.playError();
+      return;
+    }
+    if (currentQ < 8) {
+      sound.playStep();
+      setCurrentQ((q) => q + 1);
+    } else {
+      sound.playSuccess();
+      onComplete(answers);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentQ > 1) {
+      sound.playStep();
+      setCurrentQ((q) => q - 1);
+      setErrorMsg(null);
+    }
+  };
+
+  const hasQ6Triggers =
+    answers.q6_events.length > 0 &&
+    !answers.q6_events.includes('none6') &&
+    !answers.q6_events.includes('unsure6');
+
+  const hasQ8Treatments =
+    answers.q8_treatments.length > 0 && !answers.q8_treatments.includes('none8');
+
+  const progressPercent = Math.round((currentQ / 8) * 100);
+
+  return (
     <div className="quiz-step min-h-[calc(100dvh-54px)] flex flex-col justify-between bg-[#F6F9FA] font-['Outfit'] antialiased select-none">
       
       {/* Quiz Progress & Question Main Wrapper */}
@@ -620,3 +841,4 @@ return (
       </div>
     </div>
   );
+};
