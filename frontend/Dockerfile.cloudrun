@@ -1,9 +1,10 @@
-# Render-specific Dockerfile for React + Vite frontend with Nginx
-# Port: 10000 (Render's default), 8080 (local development)
+# Multi-stage Dockerfile for React + Vite frontend with Nginx
+# Optimized for Cloud Run (Free Tier)
 
 # Stage 1: Build - Compile React app with Vite
 FROM node:20-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
 # Copy package files
@@ -16,11 +17,14 @@ RUN npm ci --only=production && \
 # Copy source code
 COPY . .
 
-# Build-time environment variables for Vite
+# IMPORTANT: Build-time environment variables for Vite
+# These must be passed as ARG at build time (not ENV)
+# They get baked into the JavaScript bundle during build
 ARG VITE_API_URL
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
 
+# Set build-time environment variables
 ENV VITE_API_URL=${VITE_API_URL} \
     VITE_SUPABASE_URL=${VITE_SUPABASE_URL} \
     VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
@@ -40,12 +44,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Remove default nginx assets
 RUN rm -rf /usr/share/nginx/html/*
 
-# Expose port (Render will set to 10000, local uses 8080)
+# Expose port 8080 (Cloud Run default)
 EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

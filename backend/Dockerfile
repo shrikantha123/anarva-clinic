@@ -1,65 +1,48 @@
-# Optimized multi-stage Dockerfile for FastAPI on Cloud Run (Free Tier)
-# Uses Python 3.12-slim for minimal image size
-# Exposes port 8080 (Cloud Run default)
-# Multi-stage build for smaller final image
+# Render-specific Dockerfile for FastAPI backend
+# Optimized for Render's free tier
+# Port: 10000 (Render's default)
 
-# Stage 1: Builder - Install dependencies only
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-WORKDIR /build
-
-# Copy requirements first for better layer caching
-COPY requirements.txt .
-
-# Install dependencies to a temporary location
-RUN pip install --user --upgrade pip && \
-    pip install --user -r requirements.txt
-
-# Stage 2: Runtime - Minimal production image
-FROM python:3.12-slim AS runtime
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=8080 \
+    PORT=10000 \
     ENVIRONMENT=production
 
 WORKDIR /app
 
-# Create non-root user for security (Cloud Run best practice)
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
+# Copy requirements first for better layer caching
+COPY requirements.txt .
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Change ownership to non-root user
-RUN chown -R appuser:appuser /app
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
 
-# Switch to non-root user
 USER appuser
 
-# Expose Cloud Run default port
-EXPOSE 8080
+# Expose Render's default port
+EXPOSE 10000
 
-# Health check endpoint (optional but recommended)
+# Health check endpoint (for Render monitoring)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:10000/health')"
 
-# Run with uvicorn for optimal performance
+# Run with uvicorn
 CMD ["uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
-     "--port", "8080", \
+     "--port", "10000", \
      "--workers", "1", \
      "--log-level", "info"]

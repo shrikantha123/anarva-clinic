@@ -1,13 +1,48 @@
+version: '3.8'
+
 services:
-  anarva:
-    build: .
+  # Backend Service (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: anarva-backend
     ports:
-      - "3000:3000"
-    env_file:
-      - .env
-      - .env.gmail
+      - "3000:10000"
     environment:
-      ENVIRONMENT: production
+      - ENVIRONMENT=development
+      - PORT=10000
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DOCTOR_USERNAME=doctor
+      - DOCTOR_PASSWORD=doctor123
+      - GEMINI_MODEL=gemini-2.5-flash
+      - AI_TIMEOUT_SECONDS=60
     volumes:
-      - ./secrets:/app/secrets:ro
-    restart: unless-stopped
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 10000 --reload
+    networks:
+      - anarva-network
+
+  # Frontend Service (React + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    container_name: anarva-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    networks:
+      - anarva-network
+
+networks:
+  anarva-network:
+    driver: bridge

@@ -153,9 +153,14 @@ async def request_log(request: Request, call_next):
         request_id_var.reset(request_id)
 
 
-def health(conn=Depends(get_db)):
-    conn.health_check()
-    return {"status": "healthy", "uptime": round(time.monotonic() - STARTED)}
+def health():
+    """Health check endpoint for Render cron monitoring (every 5 minutes)"""
+    return {
+        "status": "healthy",
+        "uptime": round(time.monotonic() - STARTED),
+        "timestamp": time.time(),
+        "service": "anarva-backend"
+    }
 
 
 def create_app() -> FastAPI:
@@ -166,13 +171,14 @@ def create_app() -> FastAPI:
     )
     app.state.db = None
 
-    # CORS Middleware Configuration for Cloud Run
-    # Allow requests from your deployed frontend Cloud Run URL
+    # CORS Middleware Configuration for Render
+    # Allow requests from your deployed frontend Render URL
     # For local development, you can add "http://localhost:5173" to allowed_origins
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
-            "https://YOUR_FRONTEND_CLOUD_RUN_URL.cloudrun.app",  # Replace with your actual frontend URL
+            "https://YOUR_FRONTEND_RENDER_URL.onrender.com",  # Replace with your actual frontend URL
+            "https://YOUR_BACKEND_RENDER_URL.onrender.com",   # Replace with your actual backend URL
             "http://localhost:5173",  # For local development
             "http://localhost:3000",  # For local development
         ],
