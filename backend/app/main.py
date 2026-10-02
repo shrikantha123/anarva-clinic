@@ -193,6 +193,15 @@ def create_app() -> FastAPI:
         app.include_router(module.router, prefix="/api")
     app.add_api_route("/health", health, methods=["GET"])
 
+    @app.get("/")
+    def root():
+        return {
+            "status": "online",
+            "service": "Anarva Clinic API",
+            "health": "/health",
+            "frontend": "https://anarvaclinic.com"
+        }
+
     # Only mount static files in development or when directories exist
     # For Render/production with separate frontend deployment, these won't be mounted
     if DIST_DIR.is_dir():
