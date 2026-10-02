@@ -15,15 +15,14 @@ The frontend and backend are now structured for independent deployment so they c
 
 ```text
 repo/
-├── apps/
-│   ├── frontend/      # React app for clinic UI and assessment flow
-│   └── backend/       # FastAPI app for AI + records + notifications
-├── site/              # Static marketing pages
-├── src/               # Current frontend source kept compatible with Vite
-├── backend/           # Existing FastAPI service kept working during transition
-├── supabase/           # SQL schema and RLS setup
-├── legacy/             # Reference prototypes
-├── docs/               # deployment notes and operational docs
+├── frontend/          # React app for clinic UI and assessment flow
+│   ├── src/           # React source code
+│   ├── site/          # Static marketing pages
+│   └── legacy/        # Reference prototypes
+├── backend/           # FastAPI app for AI + records + notifications
+│   ├── app/           # Application code
+│   └── tests/         # Backend tests
+├── database/          # SQL schema and RLS setup
 ├── .env.example
 ├── Dockerfile
 ├── docker-compose.yml
@@ -100,10 +99,10 @@ git push origin main
 
 `api/` routes · `schemas/` Pydantic models · `services/` business logic · `ai/` prompt and Gemini client · `storage.py` Supabase persistence · `config.py` settings · `errors.py` error handling.
 
+## Database layout (`database`)
+
+`schema.sql` - Supabase database schema with RLS enabled.
+
 ## Environment
 
 See `.env.example`. Patient assessments and appointments are stored in Supabase; SQLite is used only by isolated backend tests.
-
-## legacy/
-
-Earlier vanilla-JS prototype of the analysis app plus its Python API tests and sample database, kept for reference.

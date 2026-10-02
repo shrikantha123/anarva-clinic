@@ -7,7 +7,7 @@ from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
-SITE_DIR = ROOT / "site"
+SITE_DIR = ROOT / "frontend" / "site"
 DIST_DIR = ROOT / "dist"
 APP_BASE = "/hair-loss-assessment"
 

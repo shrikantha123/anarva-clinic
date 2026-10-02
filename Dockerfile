@@ -3,8 +3,8 @@ FROM node:20-bookworm-slim AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-COPY index.html vite.config.ts tsconfig.json metadata.json ./
-COPY src ./src
+COPY vite.config.ts tsconfig.json metadata.json ./
+COPY frontend ./frontend
 RUN npm run build
 
 FROM python:3.12-slim AS runtime
@@ -13,7 +13,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY backend ./backend
-COPY site ./site
+COPY frontend/site ./site
 COPY --from=frontend /app/dist ./dist
 ENV ENVIRONMENT=production
 EXPOSE 3000

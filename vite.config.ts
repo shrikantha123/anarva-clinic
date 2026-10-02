@@ -7,12 +7,17 @@ export default defineConfig(() => {
   const apiTarget = process.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
   return {
+    root: 'frontend',
     base: '/hair-loss-assessment/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './frontend/src'),
       },
+    },
+    build: {
+      outDir: '../dist',
+      emptyOutDir: true,
     },
     server: {
       // In dev, the FastAPI backend (npm start / uvicorn) answers API calls.
