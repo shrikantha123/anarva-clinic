@@ -174,20 +174,15 @@ def create_app() -> FastAPI:
     # CORS Middleware Configuration for Render
     # Allow requests from your deployed frontend Render URL
     # For local development, you can add "http://localhost:5173" to allowed_origins
+  # CORS Middleware Configuration for Render & Custom Domains
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://YOUR_FRONTEND_RENDER_URL.onrender.com",  # Replace with your actual frontend URL
-            "https://YOUR_BACKEND_RENDER_URL.onrender.com",   # Replace with your actual backend URL
-            "http://localhost:5173",  # For local development (Vite dev server)
-            "http://localhost:3000",  # For local development (Docker compose)
-            "http://localhost:8080",  # For local development (Docker compose frontend)
-        ],
+        allow_origin_regex=r"^https?://.*",
         allow_credentials=True,
-        allow_methods=["*"],  # Allow all HTTP methods
-        allow_headers=["*"],  # Allow all headers
-        expose_headers=["*"],  # Expose all headers to frontend
-        max_age=600,  # Cache preflight requests for 10 minutes
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+        max_age=600,
     )
 
     app.middleware("http")(request_log)
