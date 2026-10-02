@@ -198,9 +198,12 @@ def create_app() -> FastAPI:
         app.include_router(module.router, prefix="/api")
     app.add_api_route("/health", health, methods=["GET"])
 
+    # Only mount static files in development or when directories exist
+    # For Render/production with separate frontend deployment, these won't be mounted
     if DIST_DIR.is_dir():
         app.mount(APP_BASE, StaticSPA(directory=DIST_DIR, html=True), name="assessment")
-    app.mount("/", StaticFiles(directory=SITE_DIR, html=True), name="site")
+    if SITE_DIR.is_dir():
+        app.mount("/", StaticFiles(directory=SITE_DIR, html=True), name="site")
     return app
 
 
