@@ -22,6 +22,7 @@ def login(body: LoginIn, request: Request, response: Response, settings: Setting
 
 
 
+
 @router.get("/assessments", response_model=PatientList, dependencies=[DoctorOnly])
 def list_assessments(db: DB):
     return {"assessments": db.list_all(store.PATIENTS)}
