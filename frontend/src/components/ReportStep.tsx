@@ -62,10 +62,12 @@ export const ReportStep: React.FC<ReportStepProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState('overview');
+
   const localDate = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   };
+
   const [selectedDate, setSelectedDate] = useState(localDate());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:30 AM - Morning');
   const [consultationMode, setConsultationMode] = useState('In-Clinic Visit (Kota Anarva Clinic)');
@@ -87,7 +89,9 @@ export const ReportStep: React.FC<ReportStepProps> = ({
           type: consultationMode,
         }),
       });
+
       if (!response.ok) throw new Error('appointment_booking_failed');
+
       setModalOpen(false);
       showToast(`Appointment confirmed! Slot reserved for ${selectedDate}`);
     } catch {
@@ -120,9 +124,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
   return (
     <div className="bg-[#F8FAFC] text-[#0F172A] font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col antialiased">
       <div className="flex flex-1 relative">
-        {/* ════════════════════════════════════════════════════════════════════════
-            SIDEBAR — DESKTOP
-            ════════════════════════════════════════════════════════════════════════ */}
+        {/* SIDEBAR — DESKTOP */}
         <aside className="w-20 bg-white border-r border-[#EDF2F7] flex flex-col items-center py-6 sticky top-0 h-screen z-40 shrink-0 hidden lg:flex">
           <button
             type="button"
@@ -181,9 +183,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 flex flex-col w-full" id="overview">
-          {/* ════════════════════════════════════════════════════════════════════════
-              1. REPORT ACTION BAR (Header already displays top Anarva logo)
-              ════════════════════════════════════════════════════════════════════════ */}
+          {/* Action Bar */}
           <div className="bg-white border-b border-[#EDF2F7] px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md w-full">
             <div className="flex items-center gap-3">
               <div className="inline-flex items-center gap-2 bg-[#DCFCE7] border border-[#BBF7D0] px-3.5 py-1 rounded-full text-xs font-bold text-[#15803D]">
@@ -207,7 +207,6 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 <Printer className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Download</span>
               </button>
-
               <button
                 type="button"
                 onClick={() => setModalOpen(true)}
@@ -222,9 +221,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
           {/* Main Scrollable Content */}
           <main className="flex-1 overflow-y-auto w-full">
             <div className="max-w-4xl mx-auto p-4 sm:p-8 flex flex-col gap-8">
-              {/* ════════════════════════════════════════════════════════════════════════
-                  2. PATIENT DETAILS CARD
-                  ════════════════════════════════════════════════════════════════════════ */}
+              {/* 1. PATIENT DETAILS CARD */}
               <section id="patient" className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -235,11 +232,11 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <span className="text-xs font-semibold text-[#64748B]">Name</span>
-                    <p className="text-sm font-bold text-[#0F172A] mt-1">{userInfo.name}</p>
+                    <p className="text-sm font-bold text-[#0F172A] mt-1">{userInfo.name || 'Patient'}</p>
                   </div>
                   <div>
                     <span className="text-xs font-semibold text-[#64748B]">Phone</span>
-                    <p className="text-sm font-bold text-[#0F172A] mt-1">{userInfo.phone}</p>
+                    <p className="text-sm font-bold text-[#0F172A] mt-1">{userInfo.phone || '—'}</p>
                   </div>
                   <div>
                     <span className="text-xs font-semibold text-[#64748B]">Age</span>
@@ -251,14 +248,12 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   </div>
                   <div className="sm:col-span-2">
                     <span className="text-xs font-semibold text-[#64748B]">Address / City</span>
-                    <p className="text-sm font-bold text-[#0F172A] mt-1">{userInfo.address}</p>
+                    <p className="text-sm font-bold text-[#0F172A] mt-1">{userInfo.address || '—'}</p>
                   </div>
                 </div>
               </section>
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  3. NORWOOD STAGE & OVERALL HAIR HEALTH SCORE
-                  ════════════════════════════════════════════════════════════════════════ */}
+              {/* 2. NORWOOD STAGE & OVERALL HAIR HEALTH SCORE */}
               <section id="hair-loss" className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -271,13 +266,12 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                     <div className="mb-2">
                       <span className="text-sm font-semibold text-[#64748B]">Norwood Stage</span>
                       <div className="text-4xl font-extrabold text-[#15803D] tracking-tight mt-2">
-                        {analysis.norwoodStage}
+                        {analysis?.norwoodStage ?? '—'}
                       </div>
                     </div>
-                    <h3 className="text-base font-bold text-[#0F172A]">{analysis.stageName}</h3>
-                    <p className="text-xs text-[#64748B] leading-relaxed mt-2">{analysis.stageDescription}</p>
+                    <h3 className="text-base font-bold text-[#0F172A]">{analysis?.stageName || 'Pattern Analysis'}</h3>
+                    <p className="text-xs text-[#64748B] leading-relaxed mt-2">{analysis?.stageDescription || 'Trichological evaluation completed.'}</p>
                   </div>
-
                   <div className="flex items-center justify-center">
                     <div className="relative w-full h-48 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center overflow-hidden">
                       <img
@@ -290,9 +284,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </div>
               </section>
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  4. SCALP IMAGE ANALYSIS & PHOTOGRAPHIC TRICHOSCOPY
-                  ════════════════════════════════════════════════════════════════════════ */}
+              {/* 3. SCALP IMAGE ANALYSIS */}
               <section id="scalp-analysis" className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -320,9 +312,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </div>
               </section>
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  5. DENSITY SUMMARY & OVERALL HEALTH SCORE
-                  ═══════════════════════════════════════════════════════════════���════════ */}
+              {/* 4. DENSITY SUMMARY & OVERALL HEALTH SCORE */}
               <section id="density-summary" className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -332,17 +322,17 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { label: 'Frontal Density', value: analysis.frontDensity },
-                    { label: 'Mid-Scalp Density', value: analysis.midDensity },
-                    { label: 'Crown Density', value: analysis.crownDensity },
-                    { label: 'Follicular Health', value: analysis.follicularHealth },
-                    { label: 'Dandruff Level', value: analysis.dandruffLevel },
-                    { label: 'Oiliness Level', value: analysis.oilinessLevel },
-                    { label: 'Flaking Level', value: analysis.flakingLevel },
-                    { label: 'Redness Level', value: analysis.rednessLevel },
-                    { label: 'Irritation Level', value: analysis.irritationLevel },
+                    { label: 'Frontal Density', value: analysis?.frontDensity },
+                    { label: 'Mid-Scalp Density', value: analysis?.midDensity },
+                    { label: 'Crown Density', value: analysis?.crownDensity },
+                    { label: 'Follicular Health', value: analysis?.follicularHealth },
+                    { label: 'Dandruff Level', value: analysis?.dandruffLevel },
+                    { label: 'Oiliness Level', value: analysis?.oilinessLevel },
+                    { label: 'Flaking Level', value: analysis?.flakingLevel },
+                    { label: 'Redness Level', value: analysis?.rednessLevel },
+                    { label: 'Irritation Level', value: analysis?.irritationLevel },
                   ].map((item) => {
-                    const percentage = Math.round(item.value);
+                    const percentage = Math.round(Number(item.value) || 0);
                     return (
                       <div key={item.label} className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
                         <span className="text-xs sm:text-sm font-semibold text-[#475569]">{item.label}</span>
@@ -361,9 +351,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </div>
               </section>
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  6. AI DIAGNOSIS & HAIR LOSS REASONS
-                  ════════════════════════════════════════════════════════════════════════ */}
+              {/* 5. AI DIAGNOSIS & ATTRIBUTED REASONS */}
               <section id="ai-diagnosis" className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -371,17 +359,15 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   </div>
                   AI-Assisted Diagnosis & Hair Loss Attribution
                 </h2>
-
                 <div className="mb-6 p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
                   <p className="text-xs sm:text-sm text-[#0F172A] leading-relaxed">
-                    {analysis.clinicalObservations?.join(' ') || 'Scalp assessment in progress.'}
+                    {analysis?.clinicalObservations?.join(' ') || 'Scalp assessment in progress.'}
                   </p>
                 </div>
-
                 <div className="mb-6">
                   <h3 className="text-sm font-bold text-[#0F172A] mb-3">Attributed Hair Loss Reasons</h3>
                   <div className="flex flex-col gap-2">
-                    {analysis.hairLossReasons?.map((reason, idx) => (
+                    {analysis?.hairLossReasons?.map((reason, idx) => (
                       <div
                         key={idx}
                         className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]"
@@ -392,11 +378,10 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                     ))}
                   </div>
                 </div>
-
                 <div>
                   <h3 className="text-sm font-bold text-[#0F172A] mb-3">Scalp Findings</h3>
                   <div className="flex flex-col gap-2">
-                    {analysis.scalpFindings?.map((finding, idx) => (
+                    {analysis?.scalpFindings?.map((finding, idx) => (
                       <div
                         key={idx}
                         className="flex items-start justify-between p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]"
@@ -412,10 +397,8 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </div>
               </section>
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  7. DOCTOR'S CLINICAL BRIEF & TREATMENT OPTIONS
-                  ════════════════════════════════════════════════════════════════════════ */}
-              {analysis.doctorClinicalBrief && (
+              {/* 6. CLINICAL BRIEF & TREATMENTS */}
+              {analysis?.doctorClinicalBrief && (
                 <section className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                   <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -427,20 +410,18 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                     {analysis.doctorClinicalBrief}
                   </p>
 
-                  {analysis.doctorTreatments && (
+                  {analysis?.doctorTreatments && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
-                        {
-                          label: 'Minoxidil Topical',
-                          key: 'minoxidil_topical',
-                        },
-                        { label: 'Oral Finasteride', key: 'oral_finasteride' },
-                        { label: 'Mesotherapy Sessions', key: 'mesotherapy' },
-                        { label: 'Hair Transplant', key: 'hair_transplant' },
+                        { label: 'Minoxidil / Medical Therapy', key: 'medical_therapy' },
+                        { label: 'PRP Treatment', key: 'prp' },
+                        { label: 'GFC Therapy', key: 'gfc' },
+                        { label: 'Hair Transplant Evaluation', key: 'hair_transplant' },
                         { label: 'Topical Care Routine', key: 'topical_care' },
                       ].map((treatment) => {
-                        const likelihood =
-                          analysis.doctorTreatments?.[treatment.key as keyof typeof analysis.doctorTreatments];
+                        const tr = (analysis.doctorTreatments as any)?.[treatment.key];
+                        const pct = typeof tr === 'object' && tr !== null ? (tr.probability_pct ?? 0) : (typeof tr === 'number' ? tr : 0);
+                        const likelihoodText = pct >= 60 ? 'HIGH' : pct >= 30 ? 'MEDIUM' : 'LOW';
                         return (
                           <div
                             key={treatment.label}
@@ -449,14 +430,14 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                             <span className="text-xs sm:text-sm font-semibold text-[#0F172A]">{treatment.label}</span>
                             <span
                               className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-                                likelihood === 'high'
+                                likelihoodText === 'HIGH'
                                   ? 'bg-[#FEE2E2] text-[#991B1B]'
-                                  : likelihood === 'medium'
+                                  : likelihoodText === 'MEDIUM'
                                   ? 'bg-[#FEF3C7] text-[#92400E]'
                                   : 'bg-[#DCFCE7] text-[#166534]'
                               }`}
                             >
-                              {likelihood?.toUpperCase() || 'N/A'}
+                              {likelihoodText} ({pct}%)
                             </span>
                           </div>
                         );
@@ -466,9 +447,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </section>
               )}
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  8. RECOMMENDATIONS / NEXT STEPS
-                  ════════════════════════════════════════════════════════════════════════ */}
+              {/* 7. RECOMMENDATIONS / NEXT STEPS */}
               <section id="recommendations" className="bg-white rounded-2xl p-6 sm:p-8 border border-[#EDF2F7] shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-sm">
@@ -477,7 +456,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   Recommended Next Steps
                 </h2>
                 <div className="flex flex-col gap-3">
-                  {analysis.recommendations?.map((step, idx) => {
+                  {analysis?.recommendations?.map((step, idx) => {
                     return (
                       <div key={idx} className="flex items-start gap-3 p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
                         <div className="text-2xl font-extrabold text-[#15803D] tracking-tight font-mono">
@@ -497,18 +476,12 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 </div>
               </section>
 
-              {/* ════════════════════════════════════════════════════════════════════════
-                  9 & 10. CONSULTATION RECOMMENDATION & BOOK APPOINTMENT CTA
-                  ════════════════════════════════════════════════════════════════════════ */}
+              {/* 8. CONSULTATION RECOMMENDATION & BOOK APPOINTMENT CTA */}
               <div id="consultation" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Consultation Recommendation Card: Low / Medium / High with Percentage & Simple Words */}
+                {/* Consultation Recommendation Card: Low / Medium / High */}
                 {(() => {
-                  const level =
-                    analysis.consultation.urgency === 'high'
-                      ? 'High'
-                      : analysis.consultation.urgency === 'medium'
-                      ? 'Medium'
-                      : 'Low';
+                  const urgency = (analysis?.consultation?.urgency || 'medium').toLowerCase();
+                  const level = urgency === 'high' ? 'High' : urgency === 'medium' ? 'Medium' : 'Low';
                   const simpleDesc =
                     level === 'High'
                       ? 'Consultation Strongly Recommended'
@@ -527,16 +500,14 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                       : level === 'Medium'
                       ? 'text-[#92400E]'
                       : 'text-[#15803D]';
-
                   return (
                     <div className={`lg:col-span-8 p-6 sm:p-8 rounded-2xl border ${bgColor} flex flex-col gap-4`}>
                       <div>
                         <h3 className={`text-lg font-bold ${textColor} mb-2`}>
                           {level === 'High' ? 'Consultation Strongly Recommended' : level === 'Medium' ? 'Consultation Recommended Soon' : 'Routine Consultation Advised'}
                         </h3>
-                        <p className="text-[11px] text-[#64748B]">{analysis.consultation.recommended_timeframe}</p>
+                        <p className="text-[11px] text-[#64748B]">{analysis?.consultation?.recommended_timeframe || 'Schedule within 2-4 weeks'}</p>
                       </div>
-
                       <p className="text-xs text-[#475569] leading-relaxed">
                         {simpleDesc}
                       </p>
@@ -594,9 +565,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════════════
-          APPOINTMENT BOOKING MODAL
-          ══════════════════════════════════════════════════════════════════════════════ */}
+      {/* APPOINTMENT BOOKING MODAL */}
       {modalOpen && (
         <div
           className="fixed inset-0 bg-[#0F172A]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
@@ -656,69 +625,59 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   Consultation Mode
                 </label>
                 <div className="flex flex-col gap-2">
-                  <label
-                    onClick={() => setConsultationMode('In-Clinic Visit (Kota Anarva Clinic)')}
-                    className={`text-xs flex items-center gap-2 p-2.5 rounded-xl border font-semibold cursor-pointer ${
-                      consultationMode.startsWith('In-Clinic')
-                        ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#0F172A]'
-                        : 'border-[#E2E8F0] text-[#475569]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="mode"
-                      checked={consultationMode.startsWith('In-Clinic')}
-                      onChange={() => setConsultationMode('In-Clinic Visit (Kota Anarva Clinic)')}
-                      className="accent-[#15803D]"
-                    />
-                    <span>In-Clinic Visit (Kota Anarva Clinic)</span>
-                  </label>
-                  <label
-                    onClick={() => setConsultationMode('Online Consultation')}
-                    className={`text-xs flex items-center gap-2 p-2.5 rounded-xl border font-semibold cursor-pointer ${
-                      consultationMode.startsWith('Online')
-                        ? 'border-[#BBF7D0] bg-[#F0FDF4] text-[#0F172A]'
-                        : 'border-[#E2E8F0] text-[#475569]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="mode"
-                      checked={consultationMode.startsWith('Online')}
-                      onChange={() => setConsultationMode('Online Consultation')}
-                      className="accent-[#15803D]"
-                    />
-                    <span>Online Consultation</span>
-                  </label>
+                  {[
+                    'In-Clinic Visit (Kota Anarva Clinic)',
+                    'Online Consultation',
+                  ].map((mode) => (
+                    <label
+                      key={mode}
+                      className={`flex items-center gap-3 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                        consultationMode === mode
+                          ? 'border-[#15803D] bg-[#DCFCE7]/20 font-bold text-[#15803D]'
+                          : 'border-[#E2E8F0] text-[#475569]'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="consultationMode"
+                        value={mode}
+                        checked={consultationMode === mode}
+                        onChange={() => setConsultationMode(mode)}
+                        className="accent-[#15803D]"
+                      />
+                      <span>{mode}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end pt-2">
+            <div className="flex gap-3 justify-end pt-2 border-t border-[#EDF2F7]">
               <button
                 type="button"
-                className="px-4 py-2.5 rounded-xl border border-[#E2E8F0] text-xs font-semibold text-[#475569] hover:bg-[#F8FAFC] cursor-pointer"
                 onClick={() => setModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-[#E2E8F0] text-xs font-bold text-[#475569] hover:bg-[#F1F5F9] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                disabled={isBooking}
-                className="px-5 py-2.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2"
                 onClick={handleConfirmAppointment}
+                disabled={isBooking}
+                className="px-5 py-2.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
               >
-                <span>{isBooking ? 'Saving Slot...' : 'Confirm Appointment'}</span>
+                {isBooking ? 'Confirming...' : 'Confirm Appointment'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Toast Notification */}
+      {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-4 right-4 px-4 py-3 rounded-lg bg-[#0F172A] text-white text-xs font-semibold shadow-lg z-50 animate-in slide-in-from-bottom duration-300">
-          ✓ {toastMessage}
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white px-5 py-3 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 border border-slate-700 animate-in slide-in-from-bottom duration-200">
+          <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+          <span>{toastMessage}</span>
         </div>
       )}
     </div>
