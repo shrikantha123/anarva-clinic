@@ -1,0 +1,67 @@
+# ==============================================================================
+# ANARVA CLINIC - ROBOTS.TXT CRAWL PROTOCOL & BUDGET OPTIMIZATION MATRIX
+# Domain: https://anarvaclinic.com
+# Managed by: Principal Technical SEO Architecture
+# Target Location: Kota, Udupi (Karnataka, India)
+# ==============================================================================
+
+# Global Crawler Rules
+User-agent: *
+# Allow primary public routing & assets
+Allow: /
+Allow: /hair-loss-assessment/
+Allow: /hair-loss-assessment
+Allow: /assets/
+Allow: /images/
+Allow: /favicon.ico
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.svg$
+
+# Strictly disallow backend REST API endpoints, proxy tunnels & analytical logs
+Disallow: /api/
+Disallow: /api/*
+Disallow: /backend/
+Disallow: /backend/*
+
+# Strictly disallow internal administrative portals & auth flows
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /dashboard/
+Disallow: /dashboard/*
+Disallow: /login/
+Disallow: /private/
+Disallow: /supabase/
+
+# Crawl Budget Protection: Block noisy query parameters, session tokens, and tracking noise
+Disallow: /*?*utm_*
+Disallow: /*?*fbclid=*
+Disallow: /*?*gclid=*
+Disallow: /*?*session_id=*
+Disallow: /*?*debug=*
+
+# Dedicated Directives for Googlebot
+User-agent: Googlebot
+Allow: /
+Allow: /hair-loss-assessment/
+Allow: /hair-loss-assessment
+Allow: /assets/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*?*utm_*
+
+# Dedicated Directives for Bingbot
+User-agent: Bingbot
+Allow: /
+Allow: /hair-loss-assessment/
+Allow: /hair-loss-assessment
+Disallow: /api/
+Disallow: /admin/
+
+# Explicit Canonical Host & Sitemap Registry
+Host: https://anarvaclinic.com
+Sitemap: https://anarvaclinic.com/sitemap.xml
