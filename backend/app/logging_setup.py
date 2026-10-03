@@ -71,6 +71,20 @@ def record_operation(
     email_status: str | None = None,
     error_details: str | None = None,
 ) -> None:
+    # Log to stdout/Render logs immediately
+    ops_logger = logging.getLogger("app.operations")
+    log_msg = (
+        f"operation={operation} status={status} route={route} method={http_method} "
+        f"latency_ms={latency_ms} http_status={http_status} "
+        f"llm_status={llm_status} db_status={db_status} email_status={email_status}"
+    )
+    if error_details:
+        log_msg += f" error={error_details}"
+    
+    level = logging.ERROR if status == "failed" else logging.INFO
+    ops_logger.log(level, log_msg)
+
+    # Write to database for persistent operation logs
     path = ensure_operational_log_db()
     conn = db.connect(path)
     try:
@@ -128,3 +142,5 @@ def setup_logging() -> None:
     for name in ("uvicorn", "uvicorn.error"):
         logging.getLogger(name).handlers = []
     logging.getLogger("uvicorn.access").disabled = True
+    # Ensure operations logger also logs to stdout
+    logging.getLogger("app.operations").setLevel(logging.INFO)
