@@ -93,6 +93,7 @@ export default function App() {
           analysis: currentAnalysis,
         }),
       });
+
       if (!response.ok) throw new Error('assessment_save_failed');
       const result = await response.json();
       setReportCreatedAt(result.record?.created_at ?? new Date().toISOString());
@@ -138,6 +139,7 @@ export default function App() {
     setReportCreatedAt(new Date().toISOString());
     setAnalysis((prev) => (prev ? { ...prev, assessmentId } : prev));
     setSaveError(null);
+
     // 1. Immediately display patient report
     setCurrentStep('report');
 
@@ -203,7 +205,13 @@ export default function App() {
             }}
             onRestart={handleRestart}
           />
-        ) : null;
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[50vh]">
+            <div className="w-10 h-10 border-4 border-[#16A34A] border-t-transparent rounded-full animate-spin mb-4" />
+            <h2 className="text-base sm:text-lg font-bold text-[#0B1215]">Generating Diagnostic Report...</h2>
+            <p className="text-xs text-[#5A6B72] mt-1">Please wait while we render your clinical evaluation.</p>
+          </div>
+        );
       default:
         return null;
     }
@@ -213,11 +221,9 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#F1F5F9]">
       {/* Persistent Anarva Clinic Header */}
       <Header />
-
       <main className="flex-1 flex flex-col bg-[#F6F9FA]">
         {renderActiveStep()}
       </main>
-
     </div>
   );
 }
