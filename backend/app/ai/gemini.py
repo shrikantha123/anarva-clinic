@@ -14,25 +14,26 @@ logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
 
-# Production models: gemini-3.1-flash-lite provides 1500 req/day and 30 req/min free quota.
-# Note: Google's "gemini-flash-latest" alias currently maps to "gemini-3.8-flash" which is restricted to 20 req/day.
-# Therefore, we directly use gemini-3.1-flash-lite as primary to guarantee full quota.
-MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash")
+# Pinned explicit models: NEVER use aliases with "-latest" because Google silently redirects them to 3.8-flash!
+# By using explicit pinned model names ("gemini-2.5-flash" and "gemini-3.1-flash-lite"):
+# Google NEVER redirects, and you get full 1500 requests/day with top vision precision.
+MODEL_FALLBACKS = ("gemini-2.5-flash", "gemini-3.1-flash-lite")
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
-        # If model is 3.8 or contains 'latest' (which Google maps to 3.8), use gemini-3.1-flash-lite
+        # Block any alias or 3.8 model to avoid the 20 req/day free tier cap
         if not model or "3.8" in model or "latest" in model:
-            logger.info("Setting primary model to gemini-3.1-flash-lite (1500 req/day)")
-            model = "gemini-3.1-flash-lite"
+            logger.info("Pinned model to gemini-2.5-flash to prevent Google from redirecting to 3.8-flash")
+            model = "gemini-2.5-flash"
         self._model = model
         self._timeout = timeout
 
     def _models_to_try(self) -> list[str]:
-        # Always use gemini-3.1-flash-lite first (proven high quota), then gemini-2.5-flash
-        return ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
+        # 1. gemini-2.5-flash: Pinned stable flagship (top clinical precision, 1500 req/day)
+        # 2. gemini-3.1-flash-lite: Pinned ultra-fast backup (30 req/min, 1500 req/day)
+        return ["gemini-2.5-flash", "gemini-3.1-flash-lite"]
 
     async def _generate_once(self, model: str, contents: list) -> str:
         # Fast schema generation without slow thinking delay
