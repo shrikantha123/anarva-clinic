@@ -695,9 +695,14 @@ export const DoctorPortal: React.FC = () => {
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap font-mono">{log.latency_ms ?? '—'} ms</td>
                           <td className="px-3 py-2 whitespace-nowrap">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.llm_status === 'success' ? 'bg-emerald-500/20 text-emerald-300' : log.llm_status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-white/50'}`}>
-                              {log.llm_status || '—'}
-                            </span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold inline-block w-fit ${log.llm_status === 'success' ? 'bg-emerald-500/20 text-emerald-300' : log.llm_status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-white/50'}`}>
+                                {log.llm_status || '—'}
+                              </span>
+                              {log.model && (
+                                <span className="text-[10px] text-white/60 font-mono">{log.model.replace('models/', '')}</span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.db_status === 'success' ? 'bg-blue-500/20 text-blue-300' : log.db_status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-white/50'}`}>
