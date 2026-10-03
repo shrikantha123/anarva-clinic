@@ -14,29 +14,25 @@ logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
 
-# 1500 req/day high-quota models for production (strictly avoiding 3.8-flash 20 req/day quota)
-MODEL_FALLBACKS = ("gemini-flash-latest", "gemini-3.1-flash-lite")
+# Production models: gemini-3.1-flash-lite provides 1500 req/day and 30 req/min free quota.
+# Note: Google's "gemini-flash-latest" alias currently maps to "gemini-3.8-flash" which is restricted to 20 req/day.
+# Therefore, we directly use gemini-3.1-flash-lite as primary to guarantee full quota.
+MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash")
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
-        # Override any 3.8-flash (e.g. from Render env vars) to gemini-flash-latest (1500 req/day)
-        if not model or "3.8" in model:
-            logger.info("Overriding model %s -> gemini-flash-latest for 1500 req/day quota", model)
-            model = "gemini-flash-latest"
+        # If model is 3.8 or contains 'latest' (which Google maps to 3.8), use gemini-3.1-flash-lite
+        if not model or "3.8" in model or "latest" in model:
+            logger.info("Setting primary model to gemini-3.1-flash-lite (1500 req/day)")
+            model = "gemini-3.1-flash-lite"
         self._model = model
         self._timeout = timeout
 
     def _models_to_try(self) -> list[str]:
-        primary = "gemini-flash-latest" if "3.8" in self._model else self._model
-        ordered: list[str] = []
-        for name in (primary, *MODEL_FALLBACKS):
-            if "3.8" in name:
-                continue  # Never use 3.8-flash to prevent 20 req/day 429 quota exhaustion
-            if name not in ordered:
-                ordered.append(name)
-        return ordered or ["gemini-flash-latest", "gemini-3.1-flash-lite"]
+        # Always use gemini-3.1-flash-lite first (proven high quota), then gemini-2.5-flash
+        return ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
 
     async def _generate_once(self, model: str, contents: list) -> str:
         # Fast schema generation without slow thinking delay
