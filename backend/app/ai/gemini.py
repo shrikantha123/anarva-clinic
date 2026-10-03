@@ -80,6 +80,38 @@ class Gemini:
 
         latency_ms = int((time.perf_counter() - started) * 1000)
         logger.info("Gemini Analysis Succeeded in %d ms (model: %s)", latency_ms, model)
+
+        # Precise token count and cost calculation (sh.15/1M prompt, sh.60/1M output for Flash)
+        prompt_tokens = None
+        output_tokens = None
+        estimated_cost_usd = None
+        usage = getattr(response, "usage_metadata", None)
+        if usage:
+            prompt_tokens = getattr(usage, "prompt_token_count", None)
+            output_tokens = getattr(usage, "candidates_token_count", None)
+            if prompt_tokens is not None and output_tokens is not None:
+                estimated_cost_usd = round(
+                    ((prompt_tokens * 0.15) + (output_tokens * 0.60)) / 1_000_000, 6
+                )
+
+        # Record LLM operation in operational log
+        record_operation(
+            operation="llm",
+            status="success",
+            event_type="analysis",
+            route="/api/analyze",
+            http_method="POST",
+            http_status=200,
+            latency_ms=latency_ms,
+            model=model,
+            prompt_tokens=prompt_tokens,
+            output_tokens=output_tokens,
+            estimated_cost_usd=estimated_cost_usd,
+            llm_cost_usd=estimated_cost_usd,
+            llm_status="success",
+            email_status="not_applicable",
+        )
+
         return response.text
 
     async def generate(self, contents: list) -> str:
