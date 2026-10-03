@@ -1,4 +1,4 @@
-"""Ultra-fast Gemini wrapper: hedged parallel racing with a strict 15s total time ceiling."""
+"""Ultra-fast Gemini wrapper: hedged parallel racing with a strict 25s total time ceiling."""
 
 import asyncio
 import logging
@@ -13,9 +13,9 @@ from app.schemas.analysis import AnalyzeResult
 logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 3072
-TOTAL_BUDGET_SECONDS = 15.0
-PER_CALL_TIMEOUT_SECONDS = 12.5
-HEDGE_DELAY_SECONDS = 6.5
+TOTAL_BUDGET_SECONDS = 25.0
+PER_CALL_TIMEOUT_SECONDS = 22.0
+HEDGE_DELAY_SECONDS = 10.0
 
 # Independent free-tier quota buckets
 MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite")
@@ -111,11 +111,11 @@ class Gemini:
 
     async def generate(self, contents: list) -> str:
         """
-        Fast bounded execution with strict 15s total wall-clock budget:
+        Fast bounded execution with strict 25s total wall-clock budget:
         - Fires primary model (gemini-3.1-flash-lite) immediately.
         - If it errors quickly (503/429 in ~0.3s), switches with ZERO sleep to next model.
         - If it is still running at 6.5s, launches secondary model in parallel (hedged race) so whichever finishes first wins.
-        - Never exceeds TOTAL_BUDGET_SECONDS (15s) total across all models.
+        - Never exceeds TOTAL_BUDGET_SECONDS (25s) total across all models.
         """
         models = self._models_to_try()
         deadline = time.perf_counter() + TOTAL_BUDGET_SECONDS
