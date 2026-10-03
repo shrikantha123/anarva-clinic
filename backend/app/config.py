@@ -24,9 +24,9 @@ class Settings(BaseSettings):
 
     environment: str = Field("development", validation_alias=AliasChoices("ENVIRONMENT", "NODE_ENV"))
     gemini_api_key: SecretStr | None = None
-    gemini_model: str = "gemini-3.1-flash-lite"
-    ai_timeout_seconds: float = Field(60, gt=0)
-    ai_max_attempts: int = Field(2, ge=1, le=5)
+    gemini_model: str = "gemini-3.8-flash"
+    ai_timeout_seconds: float = Field(75, gt=0)
+    ai_max_attempts: int = Field(3, ge=1, le=5)
     supabase_url: str | None = None
     supabase_service_role_key: SecretStr | None = None
     doctor_username: str | None = None
