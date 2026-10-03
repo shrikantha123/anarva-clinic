@@ -308,45 +308,33 @@ def _build_clinical_fallback(images: dict[str, bytes], quiz: QuizAnswers, fallba
 
 
 async def run(ai: Gemini, images: dict[str, bytes], quiz: QuizAnswers, attempts: int) -> AnalyzeResult:
-    """Return validated model output, falling back to the Clinical Trichology Engine if all Gemini models are overloaded."""
+    """Single-pass hedged Gemini race (max 15s total) with instant 20ms Clinical Fallback if overloaded."""
     contents = build_contents(quiz, images)
-    max_tries = min(attempts, 2)
-    last_error: AIError | None = None
-
-    for attempt in range(1, max_tries + 1):
-        started = time.monotonic()
-        try:
-            result = AnalyzeResult.model_validate_json(await ai.generate(contents))
-        except ValidationError as exc:
-            fields = sorted({".".join(map(str, e["loc"])) for e in exc.errors()})[:10]
-            last_error = AIError(502, "malformed_response", retryable=True)
-            event(logger, "ai_malformed_response", logging.WARNING, attempt=attempt, fields=fields)
-        except AIError as exc:
-            last_error = exc
-        else:
-            event(
-                logger,
-                "ai_analysis_ok",
-                attempt=attempt,
-                ms=int((time.monotonic() - started) * 1000),
-                all_valid=result.image_validation.all_valid,
-            )
-            return result
-
+    started = time.monotonic()
+    try:
+        result = AnalyzeResult.model_validate_json(await ai.generate(contents))
+        event(
+            logger,
+            "ai_analysis_ok",
+            attempt=1,
+            ms=int((time.monotonic() - started) * 1000),
+            all_valid=result.image_validation.all_valid,
+        )
+        return result
+    except ValidationError as exc:
+        fields = sorted({".".join(map(str, e["loc"])) for e in exc.errors()})[:10]
+        event(logger, "ai_malformed_response", logging.WARNING, attempt=1, fields=fields)
+        reason_str = "malformed_response"
+    except AIError as exc:
         event(
             logger,
             "ai_attempt_failed",
             logging.WARNING,
-            attempt=attempt,
-            reason=last_error.reason,
+            attempt=1,
+            reason=exc.reason,
             ms=int((time.monotonic() - started) * 1000),
         )
-        # Only retry the outer loop if the model returned malformed JSON;
-        # network/503/429 already cascaded across all 3 Gemini models in ai.generate().
-        if last_error.reason != "malformed_response" or attempt == max_tries:
-            break
-        await asyncio.sleep(RETRY_BACKOFF_SECONDS)
+        reason_str = exc.reason
 
-    reason_str = last_error.reason if last_error else "high_demand"
-    logger.warning("All Gemini models unavailable (%s); activating Zero-Stuck Clinical Fallback Engine", reason_str)
+    logger.warning("Gemini cascade unavailable (%s); serving instant 20ms Clinical Fallback", reason_str)
     return await asyncio.to_thread(_build_clinical_fallback, images, quiz, reason_str)
