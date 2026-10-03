@@ -1,4 +1,4 @@
-"""Thin Gemini wrapper: fast bounded call per attempt, with full error logging and high-demand resilience."""
+"""Thin Gemini wrapper: fast bounded call per attempt, 3-model cascade, and full operational logging."""
 
 import asyncio
 import logging
@@ -7,31 +7,31 @@ import time
 from google.genai import errors, types
 
 from app.errors import AIError
-from app.logging_setup import event, record_operation
+from app.logging_setup import record_operation
 from app.schemas.analysis import AnalyzeResult
 
 logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
+PER_MODEL_TIMEOUT_SECONDS = 24.0
 
-# Dual-cluster resilient strategy:
-# Cluster 1: gemini-3.1-flash-lite (lowest compute, 30 RPM, fastest, 1500 req/day)
-# Cluster 2: gemini-2.5-flash (separate physical hardware pool, 1500 req/day)
-# Zero 3.8 redirects to ensure 100% quota safety.
-MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash")
+# 3-model free-tier cascade across distinct Google hardware clusters & quota buckets:
+# 1. gemini-3.1-flash-lite (30 RPM, 1500 RPD, fastest ~10-12s)
+# 2. gemini-2.5-flash (15 RPM, 1500 RPD, high accuracy core cluster)
+# 3. gemini-2.5-flash-lite (30 RPM, 1500 RPD, independent lite cluster)
+MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite")
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
         self._model = "gemini-3.1-flash-lite"
-        self._timeout = timeout
+        self._timeout = min(float(timeout), PER_MODEL_TIMEOUT_SECONDS)
 
     def _models_to_try(self) -> list[str]:
-        return ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
+        return list(MODEL_FALLBACKS)
 
     async def _generate_once(self, model: str, contents: list) -> str:
-        # Fast schema generation without slow thinking delay
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=AnalyzeResult,
@@ -60,7 +60,6 @@ class Gemini:
                              error_details=str(exc), route="/api/analyze", http_method="POST")
             if code in (401, 403) and "quota" not in err_msg and "rate" not in err_msg:
                 raise AIError(503, "provider_auth") from None
-            # 503 (high demand / overloaded), 429 (rate limit / quota), 500, 502, 504 are all retryable
             is_overloaded = "overloaded" in err_msg or "high demand" in err_msg or "resource_exhausted" in err_msg
             retryable = (code in (408, 429, 503)) or (code is not None and code >= 500) or is_overloaded
             raise AIError(503 if is_overloaded or code == 503 else 502, f"provider_{code or 'error'}", retryable=retryable) from None
@@ -80,7 +79,6 @@ class Gemini:
         latency_ms = int((time.perf_counter() - started) * 1000)
         logger.info("Gemini Analysis Succeeded in %d ms (model: %s)", latency_ms, model)
 
-        # Precise token count and cost calculation (sh.15/1M prompt, sh.60/1M output for Flash)
         prompt_tokens = None
         output_tokens = None
         estimated_cost_usd = None
@@ -93,7 +91,6 @@ class Gemini:
                     ((prompt_tokens * 0.15) + (output_tokens * 0.60)) / 1_000_000, 6
                 )
 
-        # Record LLM operation in operational log
         record_operation(
             operation="llm",
             status="success",
@@ -117,29 +114,18 @@ class Gemini:
         models = self._models_to_try()
         last_error: AIError | None = None
         for index, model in enumerate(models):
-            # Up to 2 automated attempts per model with quick jitter pause to absorb micro-spikes
-            for attempt in range(2):
-                try:
-                    return await self._generate_once(model, contents)
-                except AIError as exc:
-                    last_error = exc
-                    if exc.retryable and attempt == 0:
-                        logger.warning(
-                            "Model %s momentary spike on attempt 1, auto-retrying in 1.2s: %s",
-                            model, str(exc)
-                        )
-                        await asyncio.sleep(1.2)
-                        continue
-                    break  # If attempt 2 failed or non-retryable, switch to fallback cluster
-
-            if index + 1 < len(models):
-                logger.warning(
-                    "Model %s cluster busy, switching to separate hardware cluster %s in 1.0s",
-                    model, models[index + 1]
-                )
-                await asyncio.sleep(1.0)
-                continue
-
+            try:
+                return await self._generate_once(model, contents)
+            except AIError as exc:
+                last_error = exc
+                if index + 1 < len(models):
+                    logger.warning(
+                        "Model %s busy/error (%s), switching immediately to %s",
+                        model, str(exc), models[index + 1]
+                    )
+                    await asyncio.sleep(0.5)
+                    continue
+                raise
         if last_error:
             raise last_error
         raise AIError(502, "empty_models", retryable=False)
