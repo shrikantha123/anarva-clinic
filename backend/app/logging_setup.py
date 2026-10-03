@@ -34,6 +34,7 @@ class JsonFormatter(logging.Formatter):
 
 
 def event(logger: logging.Logger, message: str, level: int = logging.INFO, **fields) -> None:
+    """Log structured event with contextual fields. Never logs sensitive data."""
     logger.log(level, message, extra={"ctx": fields})
 
 
@@ -46,7 +47,7 @@ def ensure_operational_log_db() -> Path:
         fallback_dir = Path(tempfile.gettempdir()) / "anarva_data"
         fallback_dir.mkdir(parents=True, exist_ok=True)
         OPERATIONAL_LOG_PATH = fallback_dir / "operational_logs.db"
-    
+
     db.init_db(OPERATIONAL_LOG_PATH)
     return OPERATIONAL_LOG_PATH
 
@@ -73,6 +74,8 @@ def record_operation(
 ) -> None:
     # Log to stdout/Render logs immediately
     ops_logger = logging.getLogger("app.operations")
+
+    is_slow = bool(latency_ms and latency_ms > 2000)
     log_msg = (
         f"operation={operation} status={status} route={route} method={http_method} "
         f"latency_ms={latency_ms} http_status={http_status} "
@@ -80,8 +83,15 @@ def record_operation(
     )
     if error_details:
         log_msg += f" error={error_details}"
-    
-    level = logging.ERROR if status == "failed" else logging.INFO
+    if is_slow:
+        log_msg += " [SLOW_OPERATION]"
+
+    if status == "failed":
+        level = logging.ERROR
+    elif is_slow:
+        level = logging.WARNING
+    else:
+        level = logging.INFO
     ops_logger.log(level, log_msg)
 
     # Write to database for persistent operation logs
@@ -144,3 +154,5 @@ def setup_logging() -> None:
     logging.getLogger("uvicorn.access").disabled = True
     # Ensure operations logger also logs to stdout
     logging.getLogger("app.operations").setLevel(logging.INFO)
+    logging.getLogger("app.ai").setLevel(logging.DEBUG)
+    logging.getLogger("app.storage").setLevel(logging.DEBUG)
