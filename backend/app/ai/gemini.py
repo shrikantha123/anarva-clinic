@@ -15,7 +15,7 @@ logger = logging.getLogger("app.ai")
 MAX_OUTPUT_TOKENS = 4096
 
 # Valid production models: massive capacity flagship first, then latest flash, then lite
-MODEL_FALLBACKS = ("gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite")
+MODEL_FALLBACKS = ("gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite")
 
 
 class Gemini:
