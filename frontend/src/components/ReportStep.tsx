@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard,
-  User,
+  User, 
   Activity,
   Scan,
   PieChart,
