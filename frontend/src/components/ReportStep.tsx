@@ -60,19 +60,12 @@ export const ReportStep: React.FC<ReportStepProps> = ({
   onRestart,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [zoomModal, setZoomModal] = useState<{ open: boolean; title: string; image: string | null }>({
-    open: false,
-    title: '',
-    image: null,
-  });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState('overview');
-
   const localDate = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   };
-
   const [selectedDate, setSelectedDate] = useState(localDate);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:30 AM - Morning');
   const [consultationMode, setConsultationMode] = useState('In-Clinic Visit (Kota Anarva Clinic)');
@@ -94,9 +87,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
           type: consultationMode,
         }),
       });
-
       if (!response.ok) throw new Error('appointment_booking_failed');
-
       setModalOpen(false);
       showToast(`Appointment confirmed! Slot reserved for ${selectedDate}`);
     } catch {
@@ -126,12 +117,27 @@ export const ReportStep: React.FC<ReportStepProps> = ({
     year: 'numeric',
   });
 
+  const consultData = analysis?.consultation || {
+    urgency: 'medium',
+    confidence_pct: 75,
+    reason: 'Doctor consultation recommended to evaluate hair restoration options.',
+    recommended_timeframe: 'Within 2-4 weeks',
+  };
+  const { urgency, confidence_pct: urgencyPct, reason: simpleDesc, recommended_timeframe } = consultData;
+  const level = urgency === 'high' ? 'High' : urgency === 'low' ? 'Low' : 'Medium';
+  const badgeClass =
+    urgency === 'high'
+      ? 'text-[#DC2626] bg-[#FEF2F2] border-[#FECACA]'
+      : urgency === 'low'
+      ? 'text-[#15803D] bg-[#F0FDF4] border-[#BBF7D0]'
+      : 'text-[#D97706] bg-[#FEF3C7] border-[#FDE68A]';
+
   return (
     <div className="bg-[#F8FAFC] text-[#0F172A] font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col antialiased">
       <div className="flex flex-1 relative">
-        {/* =========================================================================
-            SIDEBAR — DESKTOP
-            ========================================================================= */}
+        {/* ========================================================================
+             SIDEBAR — DESKTOP
+             ======================================================================== */}
         <aside className="w-20 bg-white border-r border-[#EDF2F7] flex flex-col items-center py-6 sticky top-0 h-screen z-40 shrink-0 hidden lg:flex">
           <button
             type="button"
@@ -180,7 +186,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
             </button>
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center text-[#475569] hover:bg-[#F1F5F9] cursor-pointer"
-              title="Clinic Support: 1800-ANARVA-CARE"
+              title="Clinic Support: 1800-ANARVA"
               onClick={() => showToast('Anarva Clinical Support Hotline: 1800-ANARVA-CARE')}
             >
               <HelpCircle className="w-5 h-5" />
@@ -190,620 +196,971 @@ export const ReportStep: React.FC<ReportStepProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 flex flex-col w-full" id="overview">
-          {/* =========================================================================
-              1. REPORT ACTION BAR
-              ========================================================================= */}
+          {/* ======================================================================
+               1. REPORT ACTION BAR (Header already displays top Anarva logo)
+               ====================================================================== */}
           <div className="bg-white border-b border-[#EDF2F7] px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md w-full">
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-2 bg-[#DCFCE7] border border-[#BBF7D0] px-3.5 py-1 rounded-full text-xs font-bold text-[#15803D]">
+              <div className="inline-flex items-center gap-2 bg-[#F8FAFC] border border-[#EDF2F7] px-3.5 py-1 rounded-full text-xs font-semibold text-[#0F172A]">
                 <div className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px] font-bold">
-                  ✓
+                  {(userInfo?.name || 'P').charAt(0).toUpperCase()}
                 </div>
-                <span>Assessment Complete</span>
-              </div>
-              <div className="hidden xs:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-[#64748B] bg-[#F8FAFC] border border-[#E2E8F0]">
-                {currentDate}
+                <span>
+                  Patient: <strong>{userInfo?.name || 'Patient'}</strong>
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="hidden sm:inline-flex items-center gap-1.5 bg-[#F0FDF4] text-[#15803D] border border-[#BBF7D0] px-2.5 py-1 rounded-full text-xs font-semibold">
+                <Sparkles className="w-3 h-3" />
+                <span>AI-Powered Analysis</span>
+              </span>
+
+              <span className="hidden lg:inline-flex items-center gap-1.5 text-xs text-[#475569] bg-[#F8FAFC] px-3 py-1.5 rounded-lg border border-[#EDF2F7]">
+                <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
+                <span>{currentDate}</span>
+              </span>
+
               <button
                 type="button"
+                className="hidden sm:inline-flex items-center gap-1.5 bg-white text-[#475569] hover:text-[#0F172A] border border-[#E2E8F0] hover:border-[#CBD5E1] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                 onClick={handlePrint}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F8FAFC] hover:bg-[#EDF2F7] text-[#475569] text-xs font-bold transition-all cursor-pointer border border-[#E2E8F0]"
-                title="Download PDF"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Download</span>
+                <span>Print</span>
               </button>
+
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#15803D] hover:bg-[#166534] active:scale-[0.99] text-white text-xs font-bold shadow-md shadow-[#15803D]/20 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#4F46E5] hover:to-[#7C3AED] text-white px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-[0_4px_14px_rgba(99,102,241,0.25)] transition-all cursor-pointer whitespace-nowrap"
+                onClick={handlePrint}
               >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Book Appointment</span>
+                <CloudDownload className="w-3.5 h-3.5" />
+                <span>Download Report</span>
+              </button>
+
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 bg-[#F0FDF4] hover:bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0] px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                onClick={onRestart}
+                title="Restart assessment with new answers"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">New Test</span>
               </button>
             </div>
           </div>
 
-          {/* Main Scrollable Content */}
-          <main className="flex-1 overflow-y-auto w-full">
-            <div className="max-w-5xl mx-auto p-4 sm:p-8 flex flex-col gap-8">
-              {/* =========================================================================
-                  2. CLINICAL SUMMARY BANNER
-                  ========================================================================= */}
-              <div className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-[#15803D] bg-[#DCFCE7] px-2.5 py-0.5 rounded-full">
-                        Clinical AI Report
-                      </span>
-                      <span className="text-xs text-[#94A3B8]">
-                        ID: {analysis.assessmentId || 'ANR-8821-26'}
-                      </span>
-                    </div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
-                      Comprehensive Trichology & Scalp Analysis
-                    </h1>
-                    <p className="text-xs sm:text-sm text-[#475569] mt-2 leading-relaxed max-w-2xl">
-                      Automated photographic assessment validated by Anarva Clinic’s AI trichoscopy engine.
-                      Follow-up clinical consultation is recommended for diagnostic confirmation.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-4 border-t lg:border-t-0 lg:border-l border-[#EDF2F7] pt-4 lg:pt-0 lg:pl-8 shrink-0">
-                    <div className="text-center">
-                      <div className="text-3xl sm:text-4xl font-extrabold text-[#15803D] font-mono">
-                        {analysis.overallScore}
-                        <span className="text-base text-[#94A3B8] font-normal">/100</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-[#475569] uppercase tracking-wider block mt-0.5">
-                        Scalp Health Score
-                      </span>
-                    </div>
-
-                    <div className="h-10 w-px bg-[#EDF2F7]" />
-
-                    <div className="text-center">
-                      <div className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] font-mono">
-                        {analysis.confidencePct}%
-                      </div>
-                      <span className="text-[11px] font-bold text-[#475569] uppercase tracking-wider block mt-0.5">
-                        AI Confidence
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          {/* Report Main Container */}
+          <main className="p-4 sm:p-7 md:p-9 max-w-7xl mx-auto w-full flex flex-col gap-6 sm:gap-7">
+            {saveError && (
+              <div role="alert" className="flex items-start sm:items-center justify-between gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
+                <span>{saveError}</span>
+                {onRetrySave && (
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={onRetrySave}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                  >
+                    <RotateCcw className={`h-3.5 w-3.5 ${isSaving ? 'animate-spin' : ''}`} />
+                    {isSaving ? 'Retrying' : 'Retry save'}
+                  </button>
+                )}
               </div>
-
-              {/* =========================================================================
-                  3. PATIENT DETAILS CARD
-                  ========================================================================= */}
-              <section id="patient" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F5F9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#15803D]">
-                      <User className="w-4 h-4" />
-                    </div>
-                    <h2 className="text-base font-bold text-[#0F172A]">Patient Profile</h2>
-                  </div>
-                  <span className="text-xs text-[#94A3B8]">Confidential Medical Record</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] block">Full Name</span>
-                    <span className="text-xs sm:text-sm font-bold text-[#0F172A] mt-0.5 block truncate">
-                      {userInfo.name || 'Anonymous Patient'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] block">Phone</span>
-                    <span className="text-xs sm:text-sm font-bold text-[#0F172A] mt-0.5 block truncate">
-                      {userInfo.phone || 'Not Provided'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] block">Gender</span>
-                    <span className="text-xs sm:text-sm font-bold text-[#0F172A] mt-0.5 block">
-                      {userInfo.gender || 'Not Specified'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] block">Location</span>
-                    <span className="text-xs sm:text-sm font-bold text-[#0F172A] mt-0.5 block truncate">
-                      {userInfo.address || 'India'}
-                    </span>
-                  </div>
-                </div>
-              </section>
-
-              {/* =========================================================================
-                  4. NORWOOD STAGE CARD & SCALE
-                  ========================================================================= */}
-              <section id="hair-loss" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 pb-3 border-b border-[#F1F5F9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#15803D]">
-                      <Activity className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-[#0F172A]">Norwood-Hamilton Classification</h2>
-                      <p className="text-xs text-[#64748B]">Clinical standard scale for androgenetic alopecia</p>
-                    </div>
-                  </div>
-                  <div className="inline-flex items-center gap-2 bg-[#FEF2F2] border border-[#FECACA] px-3 py-1 rounded-full text-xs font-bold text-[#DC2626] self-start sm:self-auto">
-                    <TrendingDown className="w-3.5 h-3.5" />
-                    <span>Stage {analysis.norwoodStage}: {analysis.stageName}</span>
-                  </div>
-                </div>
-
-                {/* Norwood Visual Bar (Stages 1 through 7) */}
-                <div className="mb-6">
-                  <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-                    {[1, 2, 3, 4, 5, 6, 7].map((stageNum) => {
-                      const isCurrent = stageNum === analysis.norwoodStage;
-                      const isPast = stageNum < analysis.norwoodStage;
-                      return (
-                        <div
-                          key={stageNum}
-                          className={`flex flex-col items-center p-2 rounded-xl border text-center transition-all ${
-                            isCurrent
-                              ? 'border-[#15803D] bg-[#F0FDF4] shadow-xs'
-                              : isPast
-                              ? 'border-[#CBD5E1] bg-[#F8FAFC]'
-                              : 'border-[#EDF2F7] bg-white opacity-60'
-                          }`}
-                        >
-                          <span
-                            className={`text-xs sm:text-sm font-extrabold font-mono ${
-                              isCurrent ? 'text-[#15803D]' : isPast ? 'text-[#475569]' : 'text-[#94A3B8]'
-                            }`}
-                          >
-                            {stageNum}
-                          </span>
-                          <span className="text-[9px] uppercase tracking-wider text-[#64748B] mt-0.5 hidden sm:block">
-                            Stage {stageNum}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#EDF2F7]">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#15803D] mb-1">
-                    Clinical Finding
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#334155] leading-relaxed">
-                    {analysis.stageDescription}
-                  </p>
-                </div>
-              </section>
-
-              {/* =========================================================================
-                  5. SCALP IMAGE ANALYSIS (PHOTOGRAPHIC TRICHOSCOPY)
-                  ========================================================================= */}
-              <section id="scalp-analysis" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F5F9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#15803D]">
-                      <Scan className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-[#0F172A]">Scalp Photographic Trichoscopy</h2>
-                      <p className="text-xs text-[#64748B]">Macro examination across 3 standard clinical angles</p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-[#15803D] bg-[#DCFCE7] px-2.5 py-0.5 rounded-full">
-                    3 Images Evaluated
+            )}
+            
+            {/* ====================================================================
+                 2. PATIENT DETAILS CARD
+                 ==================================================================== */}
+            <section id="patient" className="bg-gradient-to-b from-white to-[#FAFCFB] border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 items-center">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Patient Name</span>
+                  <span className="text-sm sm:text-base font-bold text-[#0F172A] truncate">
+                    {userInfo?.name || '—'}
+                  </span>
+                  <span className="text-xs text-[#475569]">
+                    ID: {analysis?.assessmentId || '—'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    {
-                      label: 'Frontal Hairline',
-                      sub: 'Temporal recession & miniaturisation',
-                      img: photos.front || q3FrontalsImg,
-                      density: analysis.frontDensity,
-                    },
-                    {
-                      label: 'Mid-Scalp Region',
-                      sub: 'Part-width & diffuse thinning',
-                      img: photos.mid || q3MidsImg,
-                      density: analysis.midDensity,
-                    },
-                    {
-                      label: 'Vertex / Crown',
-                      sub: 'Whorl density & circular thinning',
-                      img: photos.crown || q3CrownImg,
-                      density: analysis.crownDensity,
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="border border-[#EDF2F7] rounded-2xl overflow-hidden bg-white flex flex-col group hover:shadow-md transition-all"
-                    >
-                      <div className="relative aspect-[4/3] bg-[#0F172A] overflow-hidden">
-                        <img
-                          src={item.img}
-                          alt={item.label}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setZoomModal({ open: true, title: item.label, image: item.img })}
-                          className="absolute bottom-2.5 right-2.5 bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-lg backdrop-blur-xs transition-colors cursor-pointer"
-                          title="Zoom In"
-                        >
-                          <ZoomIn className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <div className="p-4 flex flex-col gap-2">
-                        <div>
-                          <h3 className="text-xs font-bold text-[#0F172A]">{item.label}</h3>
-                          <p className="text-[11px] text-[#64748B]">{item.sub}</p>
-                        </div>
-                        <div className="flex items-center justify-between text-xs pt-2 border-t border-[#F1F5F9]">
-                          <span className="text-[#64748B]">Estimated Density:</span>
-                          <span className="font-extrabold font-mono text-[#15803D]">
-                            {item.density} <span className="text-[10px] text-[#94A3B8]">/ 10</span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* =========================================================================
-                  6. DENSITY SUMMARY & OVERALL HEALTH SCORE
-                  ========================================================================= */}
-              <section id="density-summary" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#F1F5F9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#15803D]">
-                      <PieChart className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-[#0F172A]">Follicular Density & Scalp Health</h2>
-                      <p className="text-xs text-[#64748B]">Multi-metric analysis across physiological indices</p>
-                    </div>
-                  </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Phone Number</span>
+                  <span className="text-sm sm:text-base font-bold text-[#0F172A] truncate">
+                    {userInfo?.phone || '—'}
+                  </span>
+                  <span className="text-xs text-[#475569]">Verified Contact</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { label: 'Frontal Density', val: analysis.frontDensity, max: 10, unit: '/10' },
-                    { label: 'Mid-Scalp Density', val: analysis.midDensity, max: 10, unit: '/10' },
-                    { label: 'Crown Density', val: analysis.crownDensity, max: 10, unit: '/10' },
-                    { label: 'Follicular Health', val: analysis.follicularHealth, max: 100, unit: '%' },
-                    { label: 'Dandruff Level', val: analysis.dandruffLevel, max: 100, unit: '%' },
-                    { label: 'Oiliness Level', val: analysis.oilinessLevel, max: 100, unit: '%' },
-                    { label: 'Flaking Level', val: analysis.flakingLevel, max: 100, unit: '%' },
-                    { label: 'Redness Level', val: analysis.rednessLevel, max: 100, unit: '%' },
-                    { label: 'Irritation Level', val: analysis.irritationLevel, max: 100, unit: '%' },
-                  ].map((metric) => {
-                    const pct = metric.max === 10 ? (Number(metric.val) || 0) * 10 : (Number(metric.val) || 0);
-                    const isFavorable = ['Frontal Density', 'Mid-Scalp Density', 'Crown Density', 'Follicular Health'].includes(metric.label);
-                    const barColor = isFavorable
-                      ? pct >= 70
-                        ? 'bg-[#15803D]'
-                        : pct >= 40
-                        ? 'bg-[#D97706]'
-                        : 'bg-[#DC2626]'
-                      : pct <= 30
-                      ? 'bg-[#15803D]'
-                      : pct <= 60
-                      ? 'bg-[#D97706]'
-                      : 'bg-[#DC2626]';
-
-                    return (
-                      <div
-                        key={metric.label}
-                        className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7] flex flex-col gap-2"
-                      >
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-semibold text-[#0F172A]">{metric.label}</span>
-                          <span className="font-mono font-bold text-[#334155]">
-                            {metric.val}
-                            <span className="text-[10px] text-[#94A3B8] ml-0.5">{metric.unit}</span>
-                          </span>
-                        </div>
-                        <div className="h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                            style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* =========================================================================
-                  7. AI DIAGNOSIS & ATTRIBUTED REASONS (PIE/BREAKDOWN)
-                  ========================================================================= */}
-              <section id="ai-diagnosis" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#F1F5F9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#15803D]">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-[#0F172A]">AI Diagnosis & Causative Factors</h2>
-                      <p className="text-xs text-[#64748B]">Etiological distribution modeled on your photo signs and quiz history</p>
-                    </div>
-                  </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Gender</span>
+                  <span className="text-sm sm:text-base font-bold text-[#0F172A]">
+                    {userInfo?.gender || '—'}
+                  </span>
+                  <span className="text-xs text-[#475569]">Biological sex</span>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Dynamically generated hair-loss reasons (always total 100%) */}
-                  <div className="lg:col-span-6 flex flex-col gap-3.5">
-                    {(analysis.hairLossReasons || []).map((item, idx) => (
-                      <div
-                        key={item.reason}
-                        className={`p-4 rounded-xl border flex flex-col gap-2 ${
-                          idx === 0 ? 'border-[#FECDD3] bg-[#FFF1F2] shadow-xs' : 'border-[#EDF2F7] bg-white'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start gap-3 text-sm font-bold text-[#0F172A]">
-                          <div className={`flex items-start gap-2 min-w-0 ${idx === 0 ? 'text-[#E11D48]' : 'text-[#475569]'}`}>
-                            <Dna className="w-4 h-4 shrink-0 mt-0.5" />
-                            <span className="break-words">{item.reason}</span>
-                          </div>
-                          <span
-                            className={`text-base font-extrabold font-mono shrink-0 ${
-                              idx === 0 ? 'text-[#E11D48]' : 'text-[#475569]'
-                            }`}
-                          >
-                            {item.percentage}%
-                          </span>
-                        </div>
-
-                        <div className="h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              idx === 0 ? 'bg-gradient-to-r from-[#F43F5E] to-[#E11D48]' : 'bg-[#94A3B8]'
-                            }`}
-                            style={{ width: `${item.percentage}%` }}
-                          />
-                        </div>
-
-                        <p className="text-xs text-[#64748B] leading-relaxed mt-1">
-                          {item.explanation}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Scalp findings & clinical observations */}
-                  <div className="lg:col-span-6 flex flex-col gap-4">
-                    <div className="p-4 bg-[#F8FAFC] border border-[#EDF2F7] rounded-2xl flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <Microscope className="w-4 h-4 text-[#15803D]" />
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                          Scalp Findings
-                        </h3>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        {(analysis.scalpFindings || []).length === 0 ? (
-                          <p className="text-xs text-[#64748B] italic">
-                            No active inflammatory scalp lesions detected in provided photos.
-                          </p>
-                        ) : (
-                          (analysis.scalpFindings || []).map((finding) => (
-                            <div
-                              key={finding.condition}
-                              className="p-3 bg-white rounded-xl border border-[#EDF2F7] flex flex-col gap-1"
-                            >
-                              <div className="flex justify-between items-center text-xs font-bold text-[#0F172A]">
-                                <span className="capitalize">{finding.condition}</span>
-                                <span className="text-[#DC2626] font-mono">{finding.severity_pct}% severity</span>
-                              </div>
-                              <p className="text-[11px] text-[#64748B] leading-relaxed">
-                                {finding.observation}
-                              </p>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    {(analysis.clinicalObservations || []).length > 0 && (
-                      <div className="p-4 bg-[#F8FAFC] border border-[#EDF2F7] rounded-2xl flex flex-col gap-2.5">
-                        <div className="flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-[#15803D]" />
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                            Clinical Observations
-                          </h3>
-                        </div>
-                        <ul className="flex flex-col gap-1.5">
-                          {(analysis.clinicalObservations || []).map((observation) => (
-                            <li key={observation} className="text-xs text-[#475569] flex items-start gap-2">
-                              <span className="text-[#15803D] mt-1 font-bold">•</span>
-                              <span className="leading-relaxed">{observation}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-
-              {/* =========================================================================
-                  8. WHAT TO DO NEXT (RECOMMENDATIONS)
-                  ========================================================================= */}
-              <section id="recommendations" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#F1F5F9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#15803D]">
-                      <ClipboardCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-[#0F172A]">Recommended Next Steps</h2>
-                      <p className="text-xs text-[#64748B]">Personalized action plan to stabilize and revitalize hair growth</p>
-                    </div>
-                  </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Location</span>
+                  <span className="text-sm sm:text-base font-bold text-[#0F172A] truncate">
+                    {userInfo?.address || '—'}
+                  </span>
+                  <span className="text-xs text-[#475569]">Anarva Clinic Network</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(analysis.recommendations || []).map((step, idx) => {
-                    return (
-                      <div
-                        key={step.title}
-                        className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#EDF2F7] flex flex-col gap-2 hover:border-[#BBF7D0] transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-6 h-6 rounded-full bg-[#15803D] text-white flex items-center justify-center text-xs font-extrabold shrink-0">
-                            {idx + 1}
-                          </div>
-                          <h3 className="text-xs sm:text-sm font-bold text-[#0F172A]">
-                            {step.title}
-                          </h3>
-                        </div>
-                        <p className="text-xs text-[#475569] leading-relaxed pl-8">
-                          {step.description}
-                        </p>
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Report created</span>
+                  <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                    {reportCreatedAt
+                      ? new Date(reportCreatedAt).toLocaleString()
+                      : isSaving ? 'Saving report...' : currentDate}
+                  </span>
+                  <span className="text-xs text-[#475569]">Saved clinic record time</span>
                 </div>
-              </section>
 
-              {/* ====================================================================
-                  9 & 10. CONSULTATION RECOMMENDATION & BOOK APPOINTMENT CTA
-                  ==================================================================== */}
-              <div id="consultation" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Consultation Recommendation Card: Low / Medium / High */}
-                {(() => {
-                  const consultData = analysis?.consultation || {
-                    urgency: 'medium',
-                    confidence_pct: 75,
-                    reason: 'A medical trichology consultation is recommended to evaluate root causes and treatment plans.',
-                    recommended_timeframe: 'Within 2-4 weeks'
-                  };
-                  const { urgency, confidence_pct: urgencyPct, reason: simpleDesc, recommended_timeframe } = consultData;
-                  const level = urgency === 'high' ? 'High' : urgency === 'low' ? 'Low' : 'Medium';
-                  const badgeClass =
-                    urgency === 'high'
-                      ? 'text-[#DC2626] bg-[#FEF2F2] border-[#FECACA]'
-                      : urgency === 'low'
-                      ? 'text-[#15803D] bg-[#F0FDF4] border-[#BBF7D0]'
-                      : 'text-[#D97706] bg-[#FEF3C7] border-[#FDE68A]';
+                <div className="col-span-2 sm:col-span-1 lg:justify-self-end">
+                  <span className="inline-flex items-center gap-1.5 bg-[#F0FDF4] border border-[#BBF7D0] px-3 py-1.5 rounded-lg text-xs font-bold text-[#15803D]">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Verified AI Intake</span>
+                  </span>
+                </div>
+              </div>
+            </section>
 
-                  return (
-                    <div className="lg:col-span-5 bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col justify-between gap-4">
-                      <div>
-                        <div className="flex justify-between items-center gap-2 mb-3">
-                          <h3 className="text-base font-bold text-[#0F172A]">
-                            Doctor Consultation Recommendation
-                          </h3>
-                          <span className={`text-xs font-bold border px-2.5 py-0.5 rounded-full ${badgeClass}`}>
-                            {level} Urgency ({urgencyPct}%)
-                          </span>
-                        </div>
+            {/* ====================================================================
+                 3. HAIR LOSS OVERVIEW CARD
+                 ==================================================================== */}
+            <section id="hair-loss" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs relative overflow-hidden">
+              <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] tracking-tight">
+                    Hair Loss Overview
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
+                    Clinical classification based on the Norwood-Hamilton Scale
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FFFBEB] text-[#F59E0B] border border-[#FDE68A]">
+                  <Info className="w-3.5 h-3.5" />
+                  <span>Active Progression</span>
+                </span>
+              </div>
 
-                        <div className="flex items-center gap-3 mb-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7]">
-                          <div className="w-12 h-12 rounded-xl bg-white border border-[#CBD5E1] flex flex-col items-center justify-center shrink-0">
-                            <span className="text-sm font-extrabold text-[#0F172A]">{urgencyPct}%</span>
-                            <span className="text-[9px] text-[#64748B] font-bold uppercase">Need</span>
-                          </div>
-                          <div>
-                            <h4 className="text-xs sm:text-sm font-bold text-[#0F172A]">
-                              {level === 'High' ? 'Consultation Strongly Recommended' : level === 'Medium' ? 'Consultation Recommended Soon' : 'Routine Consultation Advised'}
-                            </h4>
-                            <p className="text-[11px] text-[#64748B]">{recommended_timeframe}</p>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-[#475569] leading-relaxed">
-                          {simpleDesc}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs text-[#94A3B8] pt-2 border-t border-[#F1F5F9]">
-                        <Stethoscope className="w-4 h-4 text-[#15803D]" />
-                        <span>Anarva Clinic doctors available in clinic & online</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Book Appointment CTA Banner */}
-                <div className="lg:col-span-7 bg-gradient-to-br from-[#15803D] to-[#166534] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-5 shadow-[0_10px_30px_-5px_rgba(21,128,61,0.3)] relative overflow-hidden">
-                  <div className="absolute top-[-50px] right-[-50px] w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
-                  <div className="relative z-10">
-                    <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                      Ready to discuss your results?
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/80 mt-1 leading-relaxed max-w-md">
-                      Book a prioritized slot with Anarva Clinic’s hair restoration specialists to plan your personalized regimen.
-                    </p>
-                  </div>
-
-                  <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setModalOpen(true)}
-                      className="px-6 py-3.5 rounded-xl bg-white text-[#15803D] font-bold text-xs sm:text-sm shadow-lg hover:bg-[#F8FAFC] active:scale-[0.99] transition-all cursor-pointer text-center"
-                    >
-                      Book Doctor Consultation Now
-                    </button>
-                    <span className="text-[11px] text-white/70 text-center sm:text-left">
-                      Slots allocated on first-come basis
-                    </span>
-                  </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pb-6 border-b border-[#F1F5F9] mb-5">
+                <div className="bg-[#F0FDF4] border-2 border-[#BBF7D0] text-[#15803D] px-6 py-2.5 rounded-full text-xl sm:text-2xl font-extrabold shadow-sm shrink-0 self-start sm:self-auto">
+                  Stage {analysis?.norwoodStage || 2}
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">
+                    {analysis?.stageName || 'Norwood Hair Loss Assessment'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#475569] mt-1 max-w-3xl leading-relaxed">
+                    {analysis?.stageDescription || 'Clinical pattern consistent with androgenetic hair loss.'}
+                  </p>
                 </div>
               </div>
 
-              {/* =========================================================================
-                  11. MEDICAL DISCLAIMER
-                  ========================================================================= */}
-              <footer className="bg-[#FFF1F2] border-2 border-[#F43F5E] rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
-                <AlertTriangle className="w-5 h-5 text-[#E11D48] shrink-0 mt-0.5" />
+              {/* Norwood Staging Scale Nodes (1 to 7) */}
+              <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 overflow-x-auto pb-1">
+                  {[
+                    { stage: 1, label: 'Stage 1', sub: 'Minimal' },
+                    { stage: 2, label: 'Stage 2', sub: 'Mild Temporal' },
+                    { stage: 3, label: 'Stage 3', sub: 'Moderate' },
+                    { stage: 4, label: 'Stage 4', sub: 'Vertex Spread' },
+                    { stage: 5, label: 'Stage 5', sub: 'Significant' },
+                    { stage: 6, label: 'Stage 6', sub: 'Severe' },
+                    { stage: 7, label: 'Stage 7', sub: 'Extensive' },
+                  ].map((item) => {
+                    const isCurrent = (analysis?.norwoodStage || 2) === item.stage;
+                    return (
+                      <div
+                        key={item.stage}
+                        className={`p-2.5 sm:p-3 rounded-xl border text-center transition-all ${
+                          isCurrent
+                            ? 'bg-[#F0FDF4] border-[#15803D] ring-2 ring-[#15803D]/10 shadow-xs -translate-y-0.5'
+                            : 'bg-[#F8FAFC] border-[#E2E8F0] opacity-80'
+                        }`}
+                      >
+                        <div
+                          className={`text-xs font-bold ${
+                            isCurrent ? 'text-[#15803D]' : 'text-[#475569]'
+                          }`}
+                        >
+                          {item.label}
+                        </div>
+                        <div
+                          className={`text-[10px] mt-0.5 ${
+                            isCurrent ? 'text-[#15803D] font-semibold' : 'text-[#94A3B8]'
+                          }`}
+                        >
+                          {item.sub}
+                        </div>
+                        {isCurrent && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#15803D] mx-auto mt-1.5 shadow-[0_0_6px_#15803D]" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {/* ====================================================================
+                 4. SCALP IMAGE ANALYSIS (FRONT, MID, CROWN)
+                 ==================================================================== */}
+            <section id="scalp-analysis">
+              <div className="flex items-center justify-between gap-3 mb-4">
                 <div>
-                  <h5 className="text-xs font-extrabold uppercase tracking-wider text-[#BE123C] mb-1">
-                    Medical Disclaimer
-                  </h5>
-                  <p className="text-xs text-[#9F1239] leading-relaxed font-medium">
-                    This AI-generated analysis is intended for informational and screening purposes only. It does not replace professional medical diagnosis, examination, or treatment. Final diagnosis and treatment decisions should be made by a qualified healthcare professional.
+                  <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] tracking-tight">
+                    Scalp Analysis
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
+                    AI-assisted density assessment across key scalp regions
                   </p>
                 </div>
-              </footer>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 text-xs text-[#475569] bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-lg hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                  onClick={() => showToast('Trichoscopy Sensor: 50x calibrated magnification enabled')}
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>High-Res Trichoscopy</span>
+                </button>
+              </div>
 
-              {/* Save Confirmation Message */}
-              {saveError && (
-                <div className="bg-[#FEE2E2] border border-[#FECACA] rounded-2xl p-4 sm:p-6 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-[#991B1B] shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-bold text-[#991B1B]">{saveError}</p>
-                    {onRetrySave && (
-                      <button
-                        type="button"
-                        onClick={onRetrySave}
-                        className="text-xs font-bold text-[#DC2626] hover:underline mt-2 cursor-pointer"
-                      >
-                        Retry Save
-                      </button>
-                    )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* 1. FRONT */}
+                <div className="bg-white border border-[#EDF2F7] rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-md transition-all group">
+                  <div className="relative h-52 bg-[#0F172A] overflow-hidden flex items-center justify-center">
+                    <img
+                      src={photos?.front || q3FrontalsImg}
+                      alt="Front scalp"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md text-white text-[11px] font-bold tracking-wider uppercase px-3 py-1 rounded-full border border-white/20">
+                      Front Scalp
+                    </div>
+                    <div
+                      className="absolute bottom-3 right-3 bg-black/65 text-white rounded-md px-2 py-1 text-[11px] flex items-center gap-1 cursor-pointer"
+                      onClick={() => showToast('Inspecting Front Scalp Trichoscopy Field')}
+                    >
+                      <ZoomIn className="w-3 h-3" />
+                      <span>50x Zoom</span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex flex-col gap-3.5 flex-1 justify-between">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-semibold text-[#475569]">Front Density</h4>
+                        <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+                          {analysis?.frontDensity ?? 5} <span className="text-xs text-[#94A3B8] font-normal">/ 10</span>
+                        </div>
+                      </div>
+                      <div className="w-12 h-12 relative shrink-0">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#F1F5F9"
+                            strokeWidth="3.5"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#14B8A6"
+                            strokeWidth="3.5"
+                            strokeDasharray={`${Math.round((analysis?.frontDensity ?? 5) * 10)}, 100`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#0F172A]">
+                          {Math.round((analysis?.frontDensity ?? 5) * 10)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F0FDFA] text-[#14B8A6] border border-[#99F6E4]">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        <span>Moderate density</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Spacer for bottom padding */}
-              <div className="h-8" />
+                {/* 2. MID / TOP */}
+                <div className="bg-white border border-[#EDF2F7] rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-md transition-all group">
+                  <div className="relative h-52 bg-[#0F172A] overflow-hidden flex items-center justify-center">
+                    <img
+                      src={photos?.mid || q3MidsImg}
+                      alt="Mid scalp"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md text-white text-[11px] font-bold tracking-wider uppercase px-3 py-1 rounded-full border border-white/20">
+                      Mid / Top Scalp
+                    </div>
+                    <div
+                      className="absolute bottom-3 right-3 bg-black/65 text-white rounded-md px-2 py-1 text-[11px] flex items-center gap-1 cursor-pointer"
+                      onClick={() => showToast('Inspecting Mid Scalp Trichoscopy Field')}
+                    >
+                      <ZoomIn className="w-3 h-3" />
+                      <span>50x Zoom</span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex flex-col gap-3.5 flex-1 justify-between">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-semibold text-[#475569]">Mid Density</h4>
+                        <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+                          {analysis?.midDensity ?? 6} <span className="text-xs text-[#94A3B8] font-normal">/ 10</span>
+                        </div>
+                      </div>
+                      <div className="w-12 h-12 relative shrink-0">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#F1F5F9"
+                            strokeWidth="3.5"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#22C55E"
+                            strokeWidth="3.5"
+                            strokeDasharray={`${Math.round((analysis?.midDensity ?? 6) * 10)}, 100`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#0F172A]">
+                          {Math.round((analysis?.midDensity ?? 6) * 10)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#10B981] border border-[#A7F3D0]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Good density</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. CROWN */}
+                <div className="bg-white border border-[#EDF2F7] rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-md transition-all group">
+                  <div className="relative h-52 bg-[#0F172A] overflow-hidden flex items-center justify-center">
+                    <img
+                      src={photos?.crown || q3CrownImg}
+                      alt="Crown scalp"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md text-white text-[11px] font-bold tracking-wider uppercase px-3 py-1 rounded-full border border-white/20">
+                      Crown Scalp
+                    </div>
+                    <div
+                      className="absolute bottom-3 right-3 bg-black/65 text-white rounded-md px-2 py-1 text-[11px] flex items-center gap-1 cursor-pointer"
+                      onClick={() => showToast('Inspecting Crown Scalp Trichoscopy Field')}
+                    >
+                      <ZoomIn className="w-3 h-3" />
+                      <span>50x Zoom</span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex flex-col gap-3.5 flex-1 justify-between">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-semibold text-[#475569]">Crown Density</h4>
+                        <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+                          {analysis?.crownDensity ?? 5} <span className="text-xs text-[#94A3B8] font-normal">/ 10</span>
+                        </div>
+                      </div>
+                      <div className="w-12 h-12 relative shrink-0">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#F1F5F9"
+                            strokeWidth="3.5"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#EC4899"
+                            strokeWidth="3.5"
+                            strokeDasharray={`${Math.round((analysis?.crownDensity ?? 5) * 10)}, 100`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#0F172A]">
+                          {Math.round((analysis?.crownDensity ?? 5) * 10)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#FFF1F2] text-[#F43F5E] border border-[#FECDD3]">
+                        <TrendingDown className="w-3.5 h-3.5" />
+                        <span>Reduced density</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ====================================================================
+                 5. OVERALL HAIR DENSITY (Exact 5-Ring Group from Reference Image)
+                 ==================================================================== */}
+            <section id="density-summary" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] tracking-tight">
+                    Overall Hair Density
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
+                    Comprehensive hair follicle & scalp density index
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight">
+                    {((((analysis?.frontDensity ?? 5) + (analysis?.midDensity ?? 6) + (analysis?.crownDensity ?? 5))) / 3).toFixed(1)}{' '}
+                    <span className="text-xs text-[#94A3B8] font-normal">/ 10</span>
+                  </div>
+                  <div className="text-xs font-bold text-[#22C55E]">+3.2% vs previous assessment</div>
+                </div>
+              </div>
+
+              {/* 5 Distinct Color Rings matching Reference Image */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+                {/* Ring 1: Sky Blue / Cyan (Overall Score) */}
+                <div className="p-4 rounded-xl border border-[#EDF2F7] bg-white flex flex-col items-center text-center hover:border-[#CBD5E1] transition-all">
+                  <div className="w-18 h-18 relative mb-2">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F1F5F9" strokeWidth="3.2" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0EA5E9" strokeWidth="3.2" strokeDasharray={`${analysis?.overallScore ?? 75}, 100`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center font-extrabold text-base text-[#0F172A]">
+                      {analysis?.overallScore ?? 75}%
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#0F172A]">Overall Score</span>
+                  <span className="text-[11px] text-[#94A3B8]">Density Index</span>
+                </div>
+
+                {/* Ring 2: Mint / Teal (Front Scalp) */}
+                <div className="p-4 rounded-xl border border-[#EDF2F7] bg-white flex flex-col items-center text-center hover:border-[#CBD5E1] transition-all">
+                  <div className="w-18 h-18 relative mb-2">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F1F5F9" strokeWidth="3.2" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#14B8A6" strokeWidth="3.2" strokeDasharray={`${Math.round((analysis?.frontDensity ?? 5) * 10)}, 100`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center font-extrabold text-base text-[#0F172A]">
+                      {Math.round((analysis?.frontDensity ?? 5) * 10)}%
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#0F172A]">Front Scalp</span>
+                  <span className="text-[11px] text-[#94A3B8]">{analysis?.frontDensity ?? 5} / 10 Density</span>
+                </div>
+
+                {/* Ring 3: Magenta / Pink (Crown Scalp) */}
+                <div className="p-4 rounded-xl border border-[#EDF2F7] bg-white flex flex-col items-center text-center hover:border-[#CBD5E1] transition-all">
+                  <div className="w-18 h-18 relative mb-2">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F1F5F9" strokeWidth="3.2" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#EC4899" strokeWidth="3.2" strokeDasharray={`${Math.round((analysis?.crownDensity ?? 5) * 10)}, 100`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center font-extrabold text-base text-[#0F172A]">
+                      {Math.round((analysis?.crownDensity ?? 5) * 10)}%
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#0F172A]">Crown Scalp</span>
+                  <span className="text-[11px] text-[#94A3B8]">{analysis?.crownDensity ?? 5} / 10 Density</span>
+                </div>
+
+                {/* Ring 4: Lime / Green (Mid Scalp) */}
+                <div className="p-4 rounded-xl border border-[#EDF2F7] bg-white flex flex-col items-center text-center hover:border-[#CBD5E1] transition-all">
+                  <div className="w-18 h-18 relative mb-2">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F1F5F9" strokeWidth="3.2" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#22C55E" strokeWidth="3.2" strokeDasharray={`${Math.round((analysis?.midDensity ?? 6) * 10)}, 100`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center font-extrabold text-base text-[#0F172A]">
+                      {Math.round((analysis?.midDensity ?? 6) * 10)}%
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#0F172A]">Mid Scalp</span>
+                  <span className="text-[11px] text-[#94A3B8]">{analysis?.midDensity ?? 6} / 10 Density</span>
+                </div>
+
+                {/* Ring 5: Purple / Indigo (Follicular Health) */}
+                <div className="p-4 rounded-xl border border-[#EDF2F7] bg-white flex flex-col items-center text-center hover:border-[#CBD5E1] transition-all col-span-2 sm:col-span-1">
+                  <div className="w-18 h-18 relative mb-2">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F1F5F9" strokeWidth="3.2" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#8B5CF6" strokeWidth="3.2" strokeDasharray={`${analysis?.follicularHealth ?? 70}, 100`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center font-extrabold text-base text-[#0F172A]">
+                      {analysis?.follicularHealth ?? 70}%
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#0F172A]">Follicular Health</span>
+                  <span className="text-[11px] text-[#94A3B8]">Anagen Ratio</span>
+                </div>
+              </div>
+            </section>
+
+            {/* ====================================================================
+                 6 & 11. SCALP HEALTH & ANATOMICAL VISUALIZATION
+                 ==================================================================== */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Scalp Health Bars with Multi-Stop Gradients */}
+              <section className="lg:col-span-7 bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col justify-between">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] tracking-tight">
+                    Scalp Health
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
+                    Clinical assessment of conditions affecting follicular retention
+                  </p>
+
+                  {/* Summary Metric Counters */}
+                  <div className="flex gap-6 sm:gap-8 my-5 pb-4 border-b border-[#F1F5F9] flex-wrap">
+                    <div>
+                      <div className="text-xl sm:text-2xl font-extrabold text-[#EC4899]">
+                        {analysis?.dandruffLevel ?? 20}%
+                      </div>
+                      <div className="text-[11px] text-[#94A3B8] font-medium">Dandruff Index</div>
+                    </div>
+                    <div>
+                      <div className="text-xl sm:text-2xl font-extrabold text-[#0EA5E9]">
+                        {analysis?.oilinessLevel ?? 30}%
+                      </div>
+                      <div className="text-[11px] text-[#94A3B8] font-medium">Sebum / Oiliness</div>
+                    </div>
+                    <div>
+                      <div className="text-xl sm:text-2xl font-extrabold text-[#F59E0B]">
+                        {analysis?.flakingLevel ?? 15}%
+                      </div>
+                      <div className="text-[11px] text-[#94A3B8] font-medium">Flaking Level</div>
+                    </div>
+                  </div>
+
+                  {/* Horizontal Concern Bars */}
+                  <div className="flex flex-col gap-4">
+                    {/* Dandruff */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-xs font-semibold text-[#0F172A]">
+                        <span>Dandruff</span>
+                        <span className="text-[#475569]">
+                          {(analysis?.dandruffLevel ?? 20) > 40 ? 'Moderate' : 'Mild'} <strong>{analysis?.dandruffLevel ?? 20}%</strong>
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#F43F5E] via-[#EC4899] to-[#D946EF]"
+                          style={{ width: `${analysis?.dandruffLevel ?? 20}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Redness */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-xs font-semibold text-[#0F172A]">
+                        <span>Redness</span>
+                        <span className="text-[#475569]">
+                          {(analysis?.rednessLevel ?? 15) > 35 ? 'Elevated' : 'Low'} <strong>{analysis?.rednessLevel ?? 15}%</strong>
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#6366F1] via-[#818CF8] to-[#38BDF8]"
+                          style={{ width: `${analysis?.rednessLevel ?? 15}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Oiliness */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-xs font-semibold text-[#0F172A]">
+                        <span>Oiliness</span>
+                        <span className="text-[#475569]">
+                          {(analysis?.oilinessLevel ?? 30) > 40 ? 'Moderate' : 'Balanced'} <strong>{analysis?.oilinessLevel ?? 30}%</strong>
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#10B981] via-[#34D399] to-[#06B6D4]"
+                          style={{ width: `${analysis?.oilinessLevel ?? 30}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Scalp Irritation */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-xs font-semibold text-[#0F172A]">
+                        <span>Scalp Irritation</span>
+                        <span className="text-[#475569]">
+                          {(analysis?.irritationLevel ?? 10) > 30 ? 'Active' : 'Low'} <strong>{analysis?.irritationLevel ?? 10}%</strong>
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA]"
+                          style={{ width: `${analysis?.irritationLevel ?? 10}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Flaking */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-xs font-semibold text-[#0F172A]">
+                        <span>Flaking</span>
+                        <span className="text-[#475569]">
+                          {(analysis?.flakingLevel ?? 15) > 30 ? 'Moderate' : 'Low'} <strong>{analysis?.flakingLevel ?? 15}%</strong>
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#F59E0B] via-[#FBBF24] to-[#F43F5E]"
+                          style={{ width: `${analysis?.flakingLevel ?? 15}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Anatomical Scalp / Cranial Condition Visualization */}
+              <section className="lg:col-span-5 bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-[#0F172A] tracking-tight">
+                      Scalp Condition Mapping
+                    </h2>
+                    <p className="text-xs text-[#475569]">Topological follicular concern localization</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#15803D] bg-[#F0FDF4] border border-[#BBF7D0] px-2 py-0.5 rounded-full">
+                    Top-Down Cranial Scan
+                  </span>
+                </div>
+
+                <div className="bg-[#FAFCFE] border border-[#EDF2F7] rounded-xl p-4 flex flex-col items-center justify-center">
+                  <svg viewBox="0 0 280 290" className="w-full max-w-[240px] h-auto">
+                    {/* Medical Cranial Outline */}
+                    <ellipse cx="140" cy="145" rx="88" ry="110" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1.5" />
+                    {/* Auricular Landmarks */}
+                    <path d="M 50 130 C 42 140, 42 160, 52 170" fill="none" stroke="#94A3B8" strokeWidth="1.2" />
+                    <path d="M 230 130 C 238 140, 238 160, 228 170" fill="none" stroke="#94A3B8" strokeWidth="1.2" />
+
+                    {/* Orientation Labels */}
+                    <text x="140" y="22" fill="#94A3B8" fontSize="8" textAnchor="middle" fontWeight="700" letterSpacing="1">
+                      ANTERIOR (FRONT)
+                    </text>
+                    <text x="140" y="278" fill="#94A3B8" fontSize="8" textAnchor="middle" fontWeight="700" letterSpacing="1">
+                      POSTERIOR (OCCIPITAL)
+                    </text>
+
+                    {/* Hairline Curve */}
+                    <path d="M 72 70 Q 140 50 208 70" fill="none" stroke="#CBD5E1" strokeWidth="1.2" strokeDasharray="3,3" />
+                    <path d="M 70 85 Q 105 105 140 88 Q 175 105 210 85" fill="none" stroke="#F59E0B" strokeWidth="1.8" />
+
+                    {/* 1. Temporal Recession Peaks */}
+                    <path d="M 70 85 Q 90 68 115 82 Q 105 105 70 85 Z" fill="rgba(245, 158, 11, 0.25)" stroke="#F59E0B" strokeWidth="1.2" />
+                    <path d="M 210 85 Q 190 68 165 82 Q 175 105 210 85 Z" fill="rgba(245, 158, 11, 0.25)" stroke="#F59E0B" strokeWidth="1.2" />
+
+                    {/* 2. Mid Scalp Stability */}
+                    <ellipse cx="140" cy="135" rx="52" ry="28" fill="rgba(20, 184, 166, 0.12)" stroke="#14B8A6" strokeWidth="1.2" strokeDasharray="3,3" />
+                    <text x="140" y="139" fill="#0D9488" fontSize="8" textAnchor="middle" fontWeight="700">
+                      Mid Scalp ({analysis?.midDensity ?? 6}/10)
+                    </text>
+
+                    {/* 3. Crown / Vertex Thinning */}
+                    <ellipse cx="140" cy="188" rx="40" ry="28" fill="rgba(236, 72, 153, 0.2)" stroke="#EC4899" strokeWidth="1.4" />
+                    <text x="140" y="191" fill="#BE185D" fontSize="8" textAnchor="middle" fontWeight="700">
+                      Vertex ({analysis?.crownDensity ?? 5}/10)
+                    </text>
+
+                    {/* 4. Occipital Donor Band */}
+                    <path d="M 68 215 Q 140 240 212 215 Q 200 250 140 254 Q 80 250 68 215 Z" fill="rgba(34, 197, 94, 0.12)" stroke="#22C55E" strokeWidth="1.2" />
+                    <text x="140" y="240" fill="#15803D" fontSize="7" textAnchor="middle" fontWeight="600">
+                      Donor Fringe (Dense)
+                    </text>
+                  </svg>
+
+                  <div className="flex flex-wrap justify-center gap-3 pt-3 border-t border-[#EEF2F6] w-full text-[11px] text-[#475569]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#EC4899]" />
+                      <span>Vertex Thinning</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                      <span>Frontal Recession</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#14B8A6]" />
+                      <span>Mid Stability</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
+
+            {/* ====================================================================
+                 7 & 8. AI-ASSISTED DIAGNOSIS & EXPLANATION
+                 ==================================================================== */}
+            <section id="ai-diagnosis" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] tracking-tight">
+                    AI-Assisted Diagnosis
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
+                    Assessment generated from questionnaire responses and scalp image analysis.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#15803D] bg-[#F0FDF4] border border-[#BBF7D0] px-2.5 py-1 rounded-full whitespace-nowrap">
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>AI confidence {analysis?.confidencePct ?? 90}%</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Dynamically generated hair-loss reasons (always total 100%) */}
+                <div className="lg:col-span-6 flex flex-col gap-3.5">
+                  {(analysis?.hairLossReasons || []).map((item, idx) => (
+                    <div
+                      key={item.reason}
+                      className={`p-4 rounded-xl border flex flex-col gap-2 ${
+                        idx === 0 ? 'border-[#FECDD3] bg-[#FFF1F2] shadow-xs' : 'border-[#EDF2F7] bg-white'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-3 text-sm font-bold text-[#0F172A]">
+                        <div className={`flex items-start gap-2 min-w-0 ${idx === 0 ? 'text-[#E11D48]' : 'text-[#475569]'}`}>
+                          <Dna className="w-4 h-4 shrink-0 mt-0.5" />
+                          <span className="break-words">{item.reason}</span>
+                        </div>
+                        <span
+                          className={`text-base font-extrabold font-mono shrink-0 ${
+                            idx === 0 ? 'text-[#E11D48]' : 'text-[#475569]'
+                          }`}
+                        >
+                          {item.percentage}%
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            idx === 0 ? 'bg-gradient-to-r from-[#F43F5E] to-[#E11D48]' : 'bg-[#94A3B8]'
+                          }`}
+                          style={{ width: `${item.percentage}%` }}
+                        />
+                      </div>
+                      {item.explanation && (
+                        <p className="text-xs text-[#475569] leading-relaxed">{item.explanation}</p>
+                      )}
+                    </div>
+                  ))}
+
+                  <div className="flex items-start gap-1.5 text-xs text-[#94A3B8] mt-1">
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#15803D] shrink-0 mt-0.5" />
+                    <span>AI likelihood scores represent automated screening indicators, not a definitive medical diagnosis.</span>
+                  </div>
+                </div>
+
+                {/* Visible findings and observations */}
+                <div className="lg:col-span-6 flex flex-col gap-4">
+                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-5 flex flex-col gap-3">
+                    <h4 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+                      <Microscope className="w-4 h-4 text-[#15803D]" />
+                      <span>Scalp findings from your photos</span>
+                    </h4>
+
+                    {(analysis?.scalpFindings || []).length === 0 ? (
+                      <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                        No specific scalp condition was clearly visible in your photos.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {(analysis?.scalpFindings || []).map((finding) => (
+                          <div key={finding.condition} className="flex items-start gap-2.5">
+                            <div className="w-5 h-5 rounded-md bg-[#DCFCE7] text-[#15803D] flex items-center justify-center shrink-0 mt-0.5">
+                              <Layers className="w-3 h-3" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-bold text-[#0F172A] break-words">
+                                {finding.condition}{' '}
+                                <span className="font-mono text-[#15803D]">{finding.severity_pct}%</span>
+                              </p>
+                              <p className="text-xs text-[#475569] leading-relaxed">{finding.observation}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {(analysis?.clinicalObservations || []).length > 0 && (
+                    <div className="bg-white border border-[#E2E8F0] rounded-2xl p-5 flex flex-col gap-3">
+                      <h4 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#15803D]" />
+                        <span>Why this assessment?</span>
+                      </h4>
+                      <div className="flex flex-col gap-2.5">
+                        {(analysis?.clinicalObservations || []).map((observation) => (
+                          <p key={observation} className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                            {observation}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {analysis?.limitations && (
+                    <p className="text-xs text-[#94A3B8] leading-relaxed">{analysis.limitations}</p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* ====================================================================
+                 8. WHAT TO DO NEXT
+                 ==================================================================== */}
+            <section id="recommendations" className="bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] tracking-tight">
+                  What To Do Next
+                </h2>
+                <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
+                  Recommended clinical action roadmap based on your AI diagnostic profile
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+                {(analysis?.recommendations || []).map((step, idx) => {
+                  const isThird = idx === 2;
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-5 rounded-2xl border transition-all flex flex-col gap-2.5 ${
+                        isThird
+                          ? 'border-[#BBF7D0] bg-[#F0FDF4]'
+                          : 'border-[#EDF2F7] bg-white hover:border-[#BBF7D0] hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="text-2xl font-extrabold text-[#15803D] tracking-tight font-mono">
+                        {String(idx + 1).padStart(2, '0')}
+                      </div>
+                      <h4 className="text-sm font-bold text-[#0F172A] leading-tight">
+                        {step.title}
+                      </h4>
+                      <p className="text-xs text-[#475569] leading-relaxed">
+                        {step.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* ====================================================================
+                 9 & 10. CONSULTATION RECOMMENDATION & BOOK APPOINTMENT CTA
+                 ==================================================================== */}
+            <div id="consultation" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Consultation Recommendation Card: Low / Medium / High with Percentage & Simple Words */}
+              <div className="lg:col-span-5 bg-white border border-[#EDF2F7] rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xs flex flex-col justify-between gap-4">
+                <div>
+                  <div className="flex justify-between items-center gap-2 mb-3">
+                    <h3 className="text-base font-bold text-[#0F172A]">
+                      Doctor Consultation Recommendation
+                    </h3>
+                    <span className={`text-xs font-bold border px-2.5 py-0.5 rounded-full ${badgeClass}`}>
+                      {level} Urgency ({urgencyPct}%)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#EDF2F7]">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-[#CBD5E1] flex flex-col items-center justify-center shrink-0">
+                      <span className="text-sm font-extrabold text-[#0F172A]">{urgencyPct}%</span>
+                      <span className="text-[9px] text-[#64748B] font-bold uppercase">Need</span>
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                        {level === 'High' ? 'Consultation Strongly Recommended' : level === 'Medium' ? 'Consultation Recommended Soon' : 'Routine Consultation Advised'}
+                      </h4>
+                      <p className="text-[11px] text-[#64748B]">{recommended_timeframe}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-[#475569] leading-relaxed">
+                    {simpleDesc}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-[#94A3B8] pt-2 border-t border-[#F1F5F9]">
+                  <Stethoscope className="w-4 h-4 text-[#15803D]" />
+                  <span>Anarva Clinic doctors available in clinic & online</span>
+                </div>
+              </div>
+
+              {/* Book Appointment CTA Banner */}
+              <div className="lg:col-span-7 bg-gradient-to-br from-[#15803D] to-[#166534] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-5 shadow-[0_10px_30px_-5px_rgba(21,128,61,0.3)] relative overflow-hidden">
+                <div className="absolute top-[-50px] right-[-50px] w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
+
+                <div className="relative z-10">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                    Ready to discuss your results?
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/90 mt-1.5 max-w-lg leading-relaxed">
+                    Talk through your hair report with an Anarva Clinic doctor and find the simplest, most effective steps for your hair.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 relative z-10">
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-[#F0FDF4] text-[#15803D] font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>Book an Appointment</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs sm:text-sm border border-white/30 transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>View Analysis Again</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ====================================================================
+                 11. DISCLAIMER
+                 ==================================================================== */}
+            <footer className="bg-[#FFF1F2] border-2 border-[#F43F5E] rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
+              <AlertTriangle className="w-5 h-5 text-[#E11D48] shrink-0 mt-0.5" />
+              <div>
+                <h5 className="text-xs font-extrabold uppercase tracking-wider text-[#BE123C] mb-1">
+                  Medical Disclaimer
+                </h5>
+                <p className="text-xs text-[#9F1239] leading-relaxed font-medium">
+                  This AI-generated analysis is intended for informational and screening purposes only. It does not replace professional medical diagnosis, examination, or treatment. Final diagnosis and treatment decisions should be made by a qualified healthcare professional.
+                </p>
+              </div>
+            </footer>
+
           </main>
         </div>
       </div>
@@ -823,7 +1180,7 @@ export const ReportStep: React.FC<ReportStepProps> = ({
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-bold text-[#0F172A]">Book Doctor Consultation</h3>
-                <p className="text-xs text-[#64748B]">Anarva Clinic Hair Restoration Center</p>
+                <p className="text-xs text-[#475569]">Anarva Clinic Hair Restoration Center</p>
               </div>
               <button
                 type="button"
@@ -840,7 +1197,6 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                   {bookingError}
                 </div>
               )}
-
               <div>
                 <label className="text-xs font-semibold text-[#475569] block mb-1.5">
                   Preferred Date & Time Slot
@@ -925,35 +1281,6 @@ export const ReportStep: React.FC<ReportStepProps> = ({
                 <span>{isBooking ? 'Saving Slot...' : 'Confirm Appointment'}</span>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ZOOM MODAL FOR SCALP PHOTOS */}
-      {zoomModal.open && (
-        <div
-          className="fixed inset-0 bg-[#0F172A]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
-          onClick={() => setZoomModal({ open: false, title: '', image: null })}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-2xl w-full p-4 shadow-2xl flex flex-col gap-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center pb-2 border-b border-[#EDF2F7]">
-              <h4 className="text-sm font-bold text-[#0F172A]">{zoomModal.title}</h4>
-              <button
-                type="button"
-                className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg"
-                onClick={() => setZoomModal({ open: false, title: '', image: null })}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {zoomModal.image && (
-              <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-black">
-                <img src={zoomModal.image} alt={zoomModal.title} className="w-full h-full object-contain" />
-              </div>
-            )}
           </div>
         </div>
       )}
