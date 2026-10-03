@@ -62,7 +62,7 @@ def _send_email(subject: str, body: str) -> None:
   
 
 
-def _send_notification(event: str, subject: str, body: str) -> None:
+def _send_notification(event: str, subject: str, body: str, resource_id: str | None = None) -> None:
     started = datetime.now()
     try:
         _send_email(subject, body)
@@ -70,7 +70,8 @@ def _send_notification(event: str, subject: str, body: str) -> None:
             "email",
             "success",
             latency_ms=int((datetime.now() - started).total_seconds() * 1000),
-            email_status="success",
+            resource_id=resource_id,
+            email_status="sent",
             route="/notifications",
             http_method="EMAIL",
             error_details=None,
@@ -81,6 +82,7 @@ def _send_notification(event: str, subject: str, body: str) -> None:
             "email",
             "failed",
             latency_ms=int((datetime.now() - started).total_seconds() * 1000),
+            resource_id=resource_id,
             email_status="failed",
             route="/notifications",
             http_method="EMAIL",
@@ -155,7 +157,7 @@ def notify_report_saved(record: dict) -> None:
             "Anarva Clinic Team",
         )
     )
-    _send_notification("report", subject, body)
+    _send_notification("report", subject, body, resource_id=report_id)
 
 
 def notify_appointment_booked(appointment: dict) -> None:
@@ -186,4 +188,4 @@ def notify_appointment_booked(appointment: dict) -> None:
             "Anarva Clinic Team",
         )
     )
-    _send_notification("appointment", subject, body)
+    _send_notification("appointment", subject, body, resource_id=appointment_id)
