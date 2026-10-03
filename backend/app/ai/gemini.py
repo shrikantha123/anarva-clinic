@@ -14,22 +14,29 @@ logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
 
-# Valid production models: massive capacity flagship first, then latest flash, then lite
-MODEL_FALLBACKS = ("gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite")
+# 1500 req/day high-quota models for production (strictly avoiding 3.8-flash 20 req/day quota)
+MODEL_FALLBACKS = ("gemini-flash-latest", "gemini-3.1-flash-lite")
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
+        # Override any 3.8-flash (e.g. from Render env vars) to gemini-flash-latest (1500 req/day)
+        if not model or "3.8" in model:
+            logger.info("Overriding model %s -> gemini-flash-latest for 1500 req/day quota", model)
+            model = "gemini-flash-latest"
         self._model = model
         self._timeout = timeout
 
     def _models_to_try(self) -> list[str]:
+        primary = "gemini-flash-latest" if "3.8" in self._model else self._model
         ordered: list[str] = []
-        for name in (self._model, *MODEL_FALLBACKS):
+        for name in (primary, *MODEL_FALLBACKS):
+            if "3.8" in name:
+                continue  # Never use 3.8-flash to prevent 20 req/day 429 quota exhaustion
             if name not in ordered:
                 ordered.append(name)
-        return ordered
+        return ordered or ["gemini-flash-latest", "gemini-3.1-flash-lite"]
 
     async def _generate_once(self, model: str, contents: list) -> str:
         # Fast schema generation without slow thinking delay
