@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     gmail_sender_email: str = "anarvaclinic8@gmail.com"
     app_public_url: str = "https://www.anarvaclinic.com/hair-loss-assessment/"
     gmail_client_secrets_file: Path = Field(default_factory=_default_gmail_client_secrets_file)
+    gmail_token_json: str | None = None
     gmail_token_file: Path = ROOT / "secrets" / "gmail-token.json"
     gmail_oauth_port: int = Field(8765, ge=1024, le=65535)
     # Signs doctor session cookies. Set it explicitly when running several instances.
