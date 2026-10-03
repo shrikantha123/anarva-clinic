@@ -151,7 +151,8 @@ def setup_logging() -> None:
     logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
     for name in ("uvicorn", "uvicorn.error"):
         logging.getLogger(name).handlers = []
-    logging.getLogger("uvicorn.access").disabled = True
+    # Enable HTTP request logs so you can see status codes in Render console
+    logging.getLogger("uvicorn.access").disabled = False
     # Ensure operations logger also logs to stdout
     logging.getLogger("app.operations").setLevel(logging.INFO)
     logging.getLogger("app.ai").setLevel(logging.DEBUG)
