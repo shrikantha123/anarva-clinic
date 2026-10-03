@@ -9,8 +9,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 logger = logging.getLogger("app.errors")
 
 AI_UNAVAILABLE = (
-    "We could not complete your hair analysis right now. "
-    "Please check your connection and try again in a moment."
+    "The AI model is experiencing high demand right now. "
+    "Please tap Retry to generate your report."
 )
 
 
