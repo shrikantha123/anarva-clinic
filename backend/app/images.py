@@ -16,7 +16,7 @@ from app.config import APP_BASE, DIST_DIR, ROOT
 MAX_BYTES = 10 * 1024 * 1024
 MAX_PIXELS = 60_000_000
 MIN_SIDE = 200
-MAX_SIDE = 1200  # Reduced for better performance
+MAX_SIDE = 768  # Matches native Gemini 768x768 vision tile for fastest inference
 FORMATS = {"JPEG", "MPO", "PNG", "WEBP"}
 DATA_URI = re.compile(r"^data:image/[\w.+-]+;base64,", re.IGNORECASE)
 
@@ -72,7 +72,7 @@ def process(value: str) -> bytes:
             img = ImageOps.exif_transpose(img).convert("RGB")
         img.thumbnail((MAX_SIDE, MAX_SIDE))
         out = io.BytesIO()
-        img.save(out, "JPEG", quality=85)
+        img.save(out, "JPEG", quality=80, optimize=True)
         return out.getvalue()
     except ImageRejected:
         raise
