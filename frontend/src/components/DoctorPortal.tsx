@@ -6,8 +6,6 @@ import {
   Eye,
   LogOut,
   Calendar,
-  CheckCircle2,
-  ChevronRight,
   Stethoscope,
   RefreshCw,
   Search,
@@ -17,7 +15,11 @@ import {
   FileText,
   Clock,
   Check,
-  XCircle
+  XCircle,
+  AlertTriangle,
+  Zap,
+  Database,
+  Mail,
 } from 'lucide-react';
 import {
   PatientAssessmentRecord,
@@ -50,10 +52,10 @@ export const DoctorPortal: React.FC = () => {
   const [assessments, setAssessments] = useState<PatientAssessmentRecord[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [systemLogs, setSystemLogs] = useState<any[]>([]);
-  
+
   // Patient whose exact report is currently opened
   const [viewingPatient, setViewingPatient] = useState<PatientAssessmentRecord | null>(null);
-  
+
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState(() =>
     new URLSearchParams(window.location.search).get('appointment_id') || ''
@@ -210,9 +212,24 @@ export const DoctorPortal: React.FC = () => {
     );
   });
 
-  // =========================================================================
-  // VIEW EXACT REPORT OVERLAY (Doctor sees the EXACT ReportStep the patient got)
-  // =========================================================================
+  const getLogBadge = (status: string) => {
+    const value = status || 'unknown';
+    const isSuccess = value === 'success';
+    return {
+      textClass: isSuccess ? 'text-emerald-300' : 'text-red-300',
+      bgClass: isSuccess ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-red-500/15 border border-red-500/30',
+      icon: isSuccess ? <Check className="w-3 h-3" /> : <XCircle className="w-3 h-3" />,
+    };
+  };
+
+  const getComponentIcon = (operation: string) => {
+    if (!operation) return <Clock className="w-3.5 h-3.5 text-white/50" />;
+    if (operation.toLowerCase().includes('llm')) return <Zap className="w-3.5 h-3.5 text-orange-400" />;
+    if (operation.toLowerCase().includes('db')) return <Database className="w-3.5 h-3.5 text-blue-400" />;
+    if (operation.toLowerCase().includes('email')) return <Mail className="w-3.5 h-3.5 text-purple-400" />;
+    return <AlertTriangle className="w-3.5 h-3.5 text-white/60" />;
+  };
+
   if (viewingPatient) {
     const patientUserInfo: UserInfo = {
       name: viewingPatient.name,
@@ -235,7 +252,6 @@ export const DoctorPortal: React.FC = () => {
 
     return (
       <div className="min-h-screen bg-[#090D0F] text-white flex flex-col font-['Outfit'] antialiased">
-        {/* Doctor Action Bar atop the Exact Report */}
         <div className="bg-[#0B1215] border-b border-[#B91C1C]/40 px-4 sm:px-8 py-3 sticky top-0 z-50 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
             <button
@@ -269,7 +285,6 @@ export const DoctorPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* Exact Patient Report (Unchanged, identical to what patient sees) */}
         <div className="flex-1 bg-[#F6F9FA] text-[#0B1215]">
           <ReportStep
             userInfo={patientUserInfo}
@@ -283,9 +298,6 @@ export const DoctorPortal: React.FC = () => {
     );
   }
 
-  // =========================================================================
-  // LOGIN SCREEN (Black, Green & White Modern Aesthetics)
-  // =========================================================================
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#090D0F] flex flex-col items-center justify-center p-4 font-['Outfit'] antialiased text-white">
@@ -334,7 +346,7 @@ export const DoctorPortal: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] active:scale-[0.99] text-white font-extrabold text-sm shadow-lg shadow-[#B91C1C]/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] active:scale-[0.99] text-white font-extrabold text-sm shadow-lg shadow-[#B91C1C]/20 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -349,18 +361,13 @@ export const DoctorPortal: React.FC = () => {
               )}
             </button>
           </form>
-
         </div>
       </div>
     );
   }
 
-  // =========================================================================
-  // DOCTOR ADMIN PANEL (Black & Green Modern Dark Theme, Clean Cards with Gender)
-  // =========================================================================
   return (
     <div className="min-h-screen bg-[#090D0F] text-white font-['Outfit'] flex flex-col antialiased">
-      {/* Top Header */}
       <header className="bg-[#0F171A] border-b border-[#B91C1C]/30 px-4 sm:px-8 py-3 sticky top-0 z-40 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
           <AnarvaLogo size="sm" />
@@ -387,7 +394,7 @@ export const DoctorPortal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAuthenticated(false)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/30 text-red-300 text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/30 text-red-300 text-xs font-bold transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Sign Out</span>
@@ -395,18 +402,12 @@ export const DoctorPortal: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Container */}
       <main className="max-w-6xl mx-auto w-full p-3 sm:p-6 flex flex-col gap-4 flex-1">
-        
-        {/* Navigation Tabs: Patients Assessments vs Appointments Database */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2 bg-[#121B1E] p-1.5 rounded-2xl border border-white/10">
             <button
               type="button"
-              onClick={() => {
-                sound.playSelect();
-                setActiveTab('patients');
-              }}
+              onClick={() => setActiveTab('patients')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'patients'
                   ? 'bg-[#B91C1C] text-white shadow-md shadow-[#B91C1C]/20'
@@ -419,10 +420,7 @@ export const DoctorPortal: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => {
-                sound.playSelect();
-                setActiveTab('appointments');
-              }}
+              onClick={() => setActiveTab('appointments')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'appointments'
                   ? 'bg-[#B91C1C] text-white shadow-md shadow-[#B91C1C]/20'
@@ -435,10 +433,7 @@ export const DoctorPortal: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => {
-                sound.playSelect();
-                setActiveTab('logs');
-              }}
+              onClick={() => setActiveTab('logs')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'logs'
                   ? 'bg-[#B91C1C] text-white shadow-md shadow-[#B91C1C]/20'
@@ -450,7 +445,6 @@ export const DoctorPortal: React.FC = () => {
             </button>
           </div>
 
-          {/* Search Bar */}
           <div className="relative w-full sm:w-64">
             <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-3 pointer-events-none" />
             <input
@@ -463,10 +457,8 @@ export const DoctorPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* TAB 1: PATIENTS ASSESSMENTS LIST */}
         {activeTab === 'patients' && (
           <div className="flex flex-col gap-3">
-            {/* Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
               {['all', 'Pending Review', 'Reviewed', 'Contacted', 'Treatment Started', 'Completed'].map((st) => (
                 <button
@@ -484,7 +476,6 @@ export const DoctorPortal: React.FC = () => {
               ))}
             </div>
 
-            {/* Clean Modern Cards: Black & Green Background, Neat Alignment */}
             {filteredPatients.length === 0 ? (
               <div className="p-12 text-center text-xs text-white/50 bg-[#121B1E] rounded-2xl border border-white/10">
                 No patient assessments found matching your filter.
@@ -496,7 +487,6 @@ export const DoctorPortal: React.FC = () => {
                     key={pt.patient_id}
                     className="bg-[#121B1E] border border-white/10 hover:border-[#B91C1C]/50 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3.5 transition-all shadow-md group"
                   >
-                    {/* Top Row: Name, ID, Gender Pill */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-[#B91C1C]/15 border border-[#B91C1C]/30 text-[#FCA5A5] font-extrabold text-sm flex items-center justify-center shrink-0">
@@ -510,13 +500,11 @@ export const DoctorPortal: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* GENDER BADGE (Replaced hair loss stage per prompt) */}
                       <span className="inline-flex items-center gap-1 font-bold text-xs bg-[#B91C1C]/15 text-[#FCA5A5] border border-[#B91C1C]/40 px-3 py-1 rounded-full shrink-0">
                         {pt.gender || 'Male'}
                       </span>
                     </div>
 
-                    {/* Middle Row: Phone & Location in Neat Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#090D0F] p-3 rounded-xl border border-white/5">
                       <div className="flex items-center gap-2 truncate">
                         <Phone className="w-3.5 h-3.5 text-[#B91C1C] shrink-0" />
@@ -528,7 +516,6 @@ export const DoctorPortal: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Bottom Row: Status Dropdown & "View Report" Action */}
                     <div className="flex items-center justify-between gap-2.5 pt-1 border-t border-white/10">
                       <div className="flex items-center gap-2 flex-1">
                         <span className="text-[11px] font-bold text-white/60">Status:</span>
@@ -546,11 +533,10 @@ export const DoctorPortal: React.FC = () => {
                         </select>
                       </div>
 
-                      {/* View Report Button (Opens Exact Patient Report) */}
                       <button
                         type="button"
                         onClick={() => openPatientExactReport(pt)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md shadow-[#B91C1C]/20 transition-all cursor-pointer shrink-0"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white font-extrabold text-xs shadow-md shadow-[#B91C1C]/20 transition-all cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5 stroke-[2.5]" />
                         <span>View Report</span>
@@ -563,7 +549,6 @@ export const DoctorPortal: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 2: APPOINTMENTS DATABASE (Simple, Clean, Doctor Reviewable) */}
         {activeTab === 'appointments' && (
           <div className="flex flex-col gap-3">
             {filteredAppointments.length === 0 ? (
@@ -577,7 +562,6 @@ export const DoctorPortal: React.FC = () => {
                     key={apt.id || apt.appointment_id}
                     className="bg-[#121B1E] border border-white/10 hover:border-[#22C55E]/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 shadow-md"
                   >
-                    {/* Header: Patient Name & Status */}
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className="text-sm sm:text-base font-bold text-white">{apt.patient_name}</h3>
@@ -598,7 +582,6 @@ export const DoctorPortal: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Booking Details */}
                     <div className="flex flex-col gap-1.5 text-xs bg-[#090D0F] p-3 rounded-xl border border-white/5">
                       <div className="flex items-center justify-between text-white/90">
                         <span className="text-white/60">Phone:</span>
@@ -610,9 +593,7 @@ export const DoctorPortal: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between text-white/90">
                         <span className="text-white/60">Booked at:</span>
-                        <span className="font-semibold">
-                          {new Date(apt.created_at).toLocaleString()}
-                        </span>
+                        <span className="font-semibold">{new Date(apt.created_at).toLocaleString()}</span>
                       </div>
                       <div className="flex items-center justify-between text-white/90">
                         <span className="text-white/60">Care team:</span>
@@ -624,7 +605,6 @@ export const DoctorPortal: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick Status Update */}
                     <div className="flex items-center justify-between pt-1 border-t border-white/10 text-xs">
                       <span className="text-white/60 font-semibold">Change Status:</span>
                       <div className="flex items-center gap-1.5">
@@ -656,7 +636,7 @@ export const DoctorPortal: React.FC = () => {
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
               <div>
                 <h3 className="text-sm font-bold text-white">Operational Log Monitor</h3>
-                <p className="text-[11px] text-white/60">Date, time, operation, startup, LLM, database, email, latency and failure details</p>
+                <p className="text-[11px] text-white/60">System events: startup, LLM, DB, email, and detailed failures</p>
               </div>
               <button
                 type="button"
@@ -670,47 +650,73 @@ export const DoctorPortal: React.FC = () => {
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-xs text-white/80">
-                <thead className="bg-[#090D0F] text-white/70">
+                <thead className="bg-[#090D0F] text-white/70 sticky top-0">
                   <tr>
-                    <th className="px-3 py-2 font-bold">Date</th>
-                    <th className="px-3 py-2 font-bold">Time</th>
+                    <th className="px-3 py-2 font-bold">Date & Time</th>
                     <th className="px-3 py-2 font-bold">Operation</th>
                     <th className="px-3 py-2 font-bold">Status</th>
-                    <th className="px-3 py-2 font-bold">LLM</th>
-                    <th className="px-3 py-2 font-bold">Cost</th>
                     <th className="px-3 py-2 font-bold">Latency</th>
+                    <th className="px-3 py-2 font-bold">LLM</th>
                     <th className="px-3 py-2 font-bold">DB</th>
                     <th className="px-3 py-2 font-bold">Email</th>
+                    <th className="px-3 py-2 font-bold">Cost</th>
                     <th className="px-3 py-2 font-bold">Error Details</th>
                   </tr>
                 </thead>
                 <tbody>
                   {systemLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="px-3 py-8 text-center text-white/50">No system events recorded yet.</td>
+                      <td colSpan={9} className="px-3 py-8 text-center text-white/50">No system events recorded yet.</td>
                     </tr>
                   ) : (
                     systemLogs.map((log) => {
                       const createdAt = log.created_at ? new Date(log.created_at) : new Date();
-                      const isSuccess = log.status === 'success';
+                      const badge = getLogBadge(log.status);
+                      const hasError = log.status === 'failed';
+
                       return (
-                        <tr key={log.id} className="border-t border-white/10 align-top">
-                          <td className="px-3 py-2 whitespace-nowrap">{createdAt.toLocaleDateString()}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-                          <td className="px-3 py-2 whitespace-nowrap font-semibold text-white">{log.operation || '—'}</td>
+                        <tr key={log.id} className={`border-t border-white/10 align-top ${hasError ? 'bg-red-950/20' : ''}`}>
+                          <td className="px-3 py-2 whitespace-nowrap text-white/80 font-medium">
+                            {createdAt.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          </td>
                           <td className="px-3 py-2 whitespace-nowrap">
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                              isSuccess ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/15 text-red-300 border border-red-500/30'
-                            }`}>
+                            <div className="flex items-center gap-2">
+                              {getComponentIcon(log.operation)}
+                              <span className="font-semibold text-white">{log.operation || '—'}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.bgClass} ${badge.textClass}`}>
+                              {badge.icon}
                               {log.status || 'unknown'}
                             </span>
                           </td>
-                          <td className="px-3 py-2 whitespace-nowrap">{log.llm_status || '—'}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">${Number(log.estimated_cost_usd ?? 0).toFixed(6)}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{log.latency_ms ?? '—'} ms</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{log.db_status || '—'}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{log.email_status || '—'}</td>
-                          <td className="px-3 py-2 max-w-[260px] break-words text-white/70">{log.error_details || '—'}</td>
+                          <td className="px-3 py-2 whitespace-nowrap font-mono">{log.latency_ms ?? '—'} ms</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.llm_status === 'success' ? 'bg-emerald-500/20 text-emerald-300' : log.llm_status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-white/50'}`}>
+                              {log.llm_status || '—'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.db_status === 'success' ? 'bg-blue-500/20 text-blue-300' : log.db_status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-white/50'}`}>
+                              {log.db_status || '—'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${log.email_status === 'success' ? 'bg-purple-500/20 text-purple-300' : log.email_status === 'failed' ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-white/50'}`}>
+                              {log.email_status || '—'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap font-mono text-white/70">${Number(log.estimated_cost_usd ?? 0).toFixed(6)}</td>
+                          <td className="px-3 py-2 max-w-xs break-words">
+                            {log.error_details ? (
+                              <div className="bg-red-950/40 border border-red-500/30 rounded px-2 py-1 text-red-200 text-[10px]">
+                                <strong>Error:</strong> {log.error_details}
+                              </div>
+                            ) : (
+                              <span className="text-white/50">—</span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })
@@ -720,7 +726,6 @@ export const DoctorPortal: React.FC = () => {
             </div>
           </div>
         )}
-
       </main>
     </div>
   );
