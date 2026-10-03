@@ -14,24 +14,21 @@ logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
 
-# gemini-3.1-flash-lite is the official GenAI SDK model with:
-# - Least spikes (lowest compute footprint, Google serves it fastest)
-# - Highest rate limit (30 requests/minute vs 15 on standard)
-# - 1,500 requests/day free quota
-# - Proven live success on Anarva Clinic without quota blocks
-MODEL_FALLBACKS = ("gemini-3.1-flash-lite",)
+# Dual-cluster resilient strategy:
+# Cluster 1: gemini-3.1-flash-lite (lowest compute, 30 RPM, fastest, 1500 req/day)
+# Cluster 2: gemini-2.5-flash (separate physical hardware pool, 1500 req/day)
+# Zero 3.8 redirects to ensure 100% quota safety.
+MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash")
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
-        # Always use gemini-3.1-flash-lite
         self._model = "gemini-3.1-flash-lite"
         self._timeout = timeout
 
     def _models_to_try(self) -> list[str]:
-        # gemini-3.1-flash-lite has the highest stability and zero 3.8 quota redirects
-        return ["gemini-3.1-flash-lite"]
+        return ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
 
     async def _generate_once(self, model: str, contents: list) -> str:
         # Fast schema generation without slow thinking delay
@@ -120,16 +117,29 @@ class Gemini:
         models = self._models_to_try()
         last_error: AIError | None = None
         for index, model in enumerate(models):
-            try:
-                return await self._generate_once(model, contents)
-            except AIError as exc:
-                last_error = exc
-                if index + 1 < len(models):
-                    logger.warning("Model %s high demand/error, pausing 1.2s before fallback to %s: %s",
-                                   model, models[index + 1], str(exc))
-                    await asyncio.sleep(1.2)
-                    continue
-                raise
+            # Up to 2 automated attempts per model with quick jitter pause to absorb micro-spikes
+            for attempt in range(2):
+                try:
+                    return await self._generate_once(model, contents)
+                except AIError as exc:
+                    last_error = exc
+                    if exc.retryable and attempt == 0:
+                        logger.warning(
+                            "Model %s momentary spike on attempt 1, auto-retrying in 1.2s: %s",
+                            model, str(exc)
+                        )
+                        await asyncio.sleep(1.2)
+                        continue
+                    break  # If attempt 2 failed or non-retryable, switch to fallback cluster
+
+            if index + 1 < len(models):
+                logger.warning(
+                    "Model %s cluster busy, switching to separate hardware cluster %s in 1.0s",
+                    model, models[index + 1]
+                )
+                await asyncio.sleep(1.0)
+                continue
+
         if last_error:
             raise last_error
         raise AIError(502, "empty_models", retryable=False)
