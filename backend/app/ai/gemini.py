@@ -1,4 +1,4 @@
-"""Thin Gemini wrapper: fast bounded call per attempt, 3-model cascade, and full operational logging."""
+"""Ultra-fast Gemini wrapper: hedged parallel racing with a strict 15s total time ceiling."""
 
 import asyncio
 import logging
@@ -12,13 +12,12 @@ from app.schemas.analysis import AnalyzeResult
 
 logger = logging.getLogger("app.ai")
 
-MAX_OUTPUT_TOKENS = 4096
-PER_MODEL_TIMEOUT_SECONDS = 24.0
+MAX_OUTPUT_TOKENS = 3072
+TOTAL_BUDGET_SECONDS = 15.0
+PER_CALL_TIMEOUT_SECONDS = 12.5
+HEDGE_DELAY_SECONDS = 6.5
 
-# 3-model free-tier cascade across distinct Google hardware clusters & quota buckets:
-# 1. gemini-3.1-flash-lite (30 RPM, 1500 RPD, fastest ~10-12s)
-# 2. gemini-2.5-flash (15 RPM, 1500 RPD, high accuracy core cluster)
-# 3. gemini-2.5-flash-lite (30 RPM, 1500 RPD, independent lite cluster)
+# Independent free-tier quota buckets
 MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite")
 
 
@@ -26,12 +25,12 @@ class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
         self._model = "gemini-3.1-flash-lite"
-        self._timeout = min(float(timeout), PER_MODEL_TIMEOUT_SECONDS)
+        self._timeout = min(float(timeout), PER_CALL_TIMEOUT_SECONDS)
 
     def _models_to_try(self) -> list[str]:
         return list(MODEL_FALLBACKS)
 
-    async def _generate_once(self, model: str, contents: list) -> str:
+    async def _generate_once(self, model: str, contents: list, timeout_sec: float) -> str:
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=AnalyzeResult,
@@ -43,7 +42,7 @@ class Gemini:
                 self._client.aio.models.generate_content(
                     model=model, contents=contents, config=config
                 ),
-                self._timeout,
+                timeout_sec,
             )
         except TimeoutError:
             latency_ms = int((time.perf_counter() - started) * 1000)
@@ -111,24 +110,63 @@ class Gemini:
         return response.text
 
     async def generate(self, contents: list) -> str:
+        """
+        Fast bounded execution with strict 15s total wall-clock budget:
+        - Fires primary model (gemini-3.1-flash-lite) immediately.
+        - If it errors quickly (503/429 in ~0.3s), switches with ZERO sleep to next model.
+        - If it is still running at 6.5s, launches secondary model in parallel (hedged race) so whichever finishes first wins.
+        - Never exceeds TOTAL_BUDGET_SECONDS (15s) total across all models.
+        """
         models = self._models_to_try()
+        deadline = time.perf_counter() + TOTAL_BUDGET_SECONDS
         last_error: AIError | None = None
-        for index, model in enumerate(models):
-            try:
-                return await self._generate_once(model, contents)
-            except AIError as exc:
-                last_error = exc
-                if index + 1 < len(models):
-                    logger.warning(
-                        "Model %s busy/error (%s), switching immediately to %s",
-                        model, str(exc), models[index + 1]
+
+        primary_task = asyncio.create_task(
+            self._generate_once(models[0], contents, min(self._timeout, TOTAL_BUDGET_SECONDS))
+        )
+        active_tasks: set[asyncio.Task] = {primary_task}
+        next_model_idx = 1
+
+        try:
+            while active_tasks:
+                remaining = deadline - time.perf_counter()
+                if remaining <= 0.2:
+                    raise AIError(504, "timeout", retryable=True)
+
+                wait_timeout = min(HEDGE_DELAY_SECONDS, remaining) if next_model_idx < len(models) else remaining
+                done, _ = await asyncio.wait(
+                    active_tasks,
+                    timeout=wait_timeout,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+
+                for finished in done:
+                    active_tasks.discard(finished)
+                    try:
+                        result_text = finished.result()
+                        return result_text
+                    except AIError as exc:
+                        last_error = exc
+                    except Exception as exc:
+                        last_error = AIError(502, str(exc), retryable=True)
+
+                # Launch next backup model immediately if primary failed OR if hedge timer fired while primary is slow
+                remaining_after = deadline - time.perf_counter()
+                if next_model_idx < len(models) and remaining_after > 2.5:
+                    backup_model = models[next_model_idx]
+                    next_model_idx += 1
+                    logger.info("Launching hedged/failover model %s (%.1fs budget left)", backup_model, remaining_after)
+                    backup_task = asyncio.create_task(
+                        self._generate_once(backup_model, contents, min(self._timeout, remaining_after))
                     )
-                    await asyncio.sleep(0.5)
-                    continue
-                raise
+                    active_tasks.add(backup_task)
+        finally:
+            for t in active_tasks:
+                t.cancel()
+
         if last_error:
             raise last_error
-        raise AIError(502, "empty_models", retryable=False)
+        raise AIError(503, "high_demand", retryable=True)
 
     async def aclose(self) -> None:
         await self._client.aio.aclose()
