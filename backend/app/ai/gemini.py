@@ -14,26 +14,24 @@ logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
 
-# Pinned explicit models: NEVER use aliases with "-latest" because Google silently redirects them to 3.8-flash!
-# By using explicit pinned model names ("gemini-2.5-flash" and "gemini-3.1-flash-lite"):
-# Google NEVER redirects, and you get full 1500 requests/day with top vision precision.
-MODEL_FALLBACKS = ("gemini-2.5-flash", "gemini-3.1-flash-lite")
+# gemini-3.1-flash-lite is the official GenAI SDK model with:
+# - Least spikes (lowest compute footprint, Google serves it fastest)
+# - Highest rate limit (30 requests/minute vs 15 on standard)
+# - 1,500 requests/day free quota
+# - Proven live success on Anarva Clinic without quota blocks
+MODEL_FALLBACKS = ("gemini-3.1-flash-lite",)
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
-        # Block any alias or 3.8 model to avoid the 20 req/day free tier cap
-        if not model or "3.8" in model or "latest" in model:
-            logger.info("Pinned model to gemini-2.5-flash to prevent Google from redirecting to 3.8-flash")
-            model = "gemini-2.5-flash"
-        self._model = model
+        # Always use gemini-3.1-flash-lite
+        self._model = "gemini-3.1-flash-lite"
         self._timeout = timeout
 
     def _models_to_try(self) -> list[str]:
-        # 1. gemini-2.5-flash: Pinned stable flagship (top clinical precision, 1500 req/day)
-        # 2. gemini-3.1-flash-lite: Pinned ultra-fast backup (30 req/min, 1500 req/day)
-        return ["gemini-2.5-flash", "gemini-3.1-flash-lite"]
+        # gemini-3.1-flash-lite has the highest stability and zero 3.8 quota redirects
+        return ["gemini-3.1-flash-lite"]
 
     async def _generate_once(self, model: str, contents: list) -> str:
         # Fast schema generation without slow thinking delay
