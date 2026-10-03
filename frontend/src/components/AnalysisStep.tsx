@@ -190,9 +190,18 @@ export const AnalysisStep: React.FC<AnalysisStepProps> = ({
 
       } catch {
         if (!isMounted) return;
+        // On initial transient high-demand / 503 error, auto-retry once after 2.5s smoothly
+        if (attempt === 0) {
+          setTimeout(() => {
+            if (isMounted) {
+              retry();
+            }
+          }, 2500);
+          return;
+        }
         clearInterval(interval);
         setErrorMessage(
-          'We could not complete your analysis right now. Please check your connection and try again.'
+          'The AI model is experiencing high demand right now. Please click Retry below — your photos and answers are safely saved.'
         );
       }
     };
