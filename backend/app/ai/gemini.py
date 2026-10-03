@@ -1,8 +1,11 @@
-"""Thin Gemini wrapper: fast bounded call per attempt, with full error logging."""
+"""Thin Gemini wrapper: fast bounded call per attempt, with full error logging and high-demand resilience."""
+
 import asyncio
 import logging
 import time
+
 from google.genai import errors, types
+
 from app.errors import AIError
 from app.logging_setup import event, record_operation
 from app.schemas.analysis import AnalyzeResult
@@ -10,8 +13,9 @@ from app.schemas.analysis import AnalyzeResult
 logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
-# Valid 2027 production models: fast, low-cost, accurate
-MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.8-flash")
+
+# Valid production models: massive capacity flagship first, then latest flash, then lite
+MODEL_FALLBACKS = ("gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite")
 
 
 class Gemini:
@@ -34,7 +38,6 @@ class Gemini:
             response_schema=AnalyzeResult,
             max_output_tokens=MAX_OUTPUT_TOKENS,
         )
-
         started = time.perf_counter()
         try:
             response = await asyncio.wait_for(
@@ -51,19 +54,25 @@ class Gemini:
             raise AIError(504, "timeout", retryable=True) from None
         except errors.APIError as exc:
             latency_ms = int((time.perf_counter() - started) * 1000)
-            logger.error("Gemini API Error [%s]: %s (model: %s)", getattr(exc, 'code', 'unknown'), str(exc), model)
+            code = getattr(exc, 'code', None)
+            err_msg = str(exc).lower()
+            logger.error("Gemini API Error [%s]: %s (model: %s)", code or 'unknown', str(exc), model)
             record_operation("llm", "failed", latency_ms=latency_ms, llm_status="failed", model=model,
                              error_details=str(exc), route="/api/analyze", http_method="POST")
-            if getattr(exc, 'code', None) in (401, 403):
+            if code in (401, 403) and "quota" not in err_msg and "rate" not in err_msg:
                 raise AIError(503, "provider_auth") from None
-            retryable = getattr(exc, 'code', 0) in (408, 429) or getattr(exc, 'code', 0) >= 500
-            raise AIError(502, f"provider_{getattr(exc, 'code', 'error')}", retryable=retryable) from None
+            # 503 (high demand / overloaded), 429 (rate limit / quota), 500, 502, 504 are all retryable
+            is_overloaded = "overloaded" in err_msg or "high demand" in err_msg or "resource_exhausted" in err_msg
+            retryable = (code in (408, 429, 503)) or (code is not None and code >= 500) or is_overloaded
+            raise AIError(503 if is_overloaded or code == 503 else 502, f"provider_{code or 'error'}", retryable=retryable) from None
         except Exception as exc:
             latency_ms = int((time.perf_counter() - started) * 1000)
+            err_msg = str(exc).lower()
+            is_overloaded = "overloaded" in err_msg or "high demand" in err_msg or "503" in err_msg
             logger.error("Gemini Unexpected Error: %s: %s (model: %s)", type(exc).__name__, str(exc), model)
             record_operation("llm", "failed", latency_ms=latency_ms, llm_status="failed", model=model,
                              error_details=f"{type(exc).__name__}: {str(exc)}", route="/api/analyze", http_method="POST")
-            raise AIError(502, str(exc), retryable=True) from None
+            raise AIError(503 if is_overloaded else 502, str(exc), retryable=True) from None
 
         if not response.text:
             logger.error("Gemini returned empty text for model %s", model)
@@ -82,7 +91,9 @@ class Gemini:
             except AIError as exc:
                 last_error = exc
                 if index + 1 < len(models):
-                    logger.warning("Falling back from %s to %s due to: %s", model, models[index + 1], str(exc))
+                    logger.warning("Model %s high demand/error, pausing 1.2s before fallback to %s: %s",
+                                   model, models[index + 1], str(exc))
+                    await asyncio.sleep(1.2)
                     continue
                 raise
         if last_error:
