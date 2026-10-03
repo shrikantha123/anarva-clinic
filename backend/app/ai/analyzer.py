@@ -12,7 +12,7 @@ from app.logging_setup import event
 from app.schemas.analysis import AnalyzeResult, QuizAnswers
 
 logger = logging.getLogger("app.ai")
-RETRY_BACKOFF_SECONDS = 1
+RETRY_BACKOFF_SECONDS = 2.0
 
 
 async def run(ai: Gemini, images: dict[str, bytes], quiz: QuizAnswers, attempts: int) -> AnalyzeResult:
