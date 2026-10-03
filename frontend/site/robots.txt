@@ -1,4 +1,15 @@
+# Robots.txt for Anarva Clinic
 User-agent: *
 Allow: /
+Allow: /favicon.ico
+Allow: /favicon-48x48.png
+Allow: /favicon-96x96.png
+Allow: /favicon-192x192.png
+Allow: /apple-touch-icon.png
+Disallow: /api/
+Disallow: /backend/
 
+# Explicit Canonical Host & Sitemap Registry
+Host: https://anarvaclinic.com
+Sitemap: https://anarvaclinic.com/sitemap.xml
 Sitemap: https://www.anarvaclinic.com/sitemap.xml
