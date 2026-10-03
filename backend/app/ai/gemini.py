@@ -10,7 +10,8 @@ from app.schemas.analysis import AnalyzeResult
 logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
-MODEL_FALLBACKS = ("gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash")
+# Valid 2027 production models: fast, low-cost, accurate
+MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.8-flash")
 
 
 class Gemini:
