@@ -636,7 +636,9 @@ export const DoctorPortal: React.FC = () => {
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
               <div>
                 <h3 className="text-sm font-bold text-white">Operational Log Monitor</h3>
-                <p className="text-[11px] text-white/60">System events: startup, LLM, DB, email, and detailed failures</p>
+                <p className="text-[11px] text-white/60">
+                  System events: startup, LLM, DB, email · Total AI Spend: <span className="text-emerald-400 font-mono font-bold">₹{(systemLogs.reduce((acc: number, l: any) => acc + (Number(l.estimated_cost_usd ?? l.llm_cost_usd ?? 0) * 86.5), 0)).toFixed(2)}</span>
+                </p>
               </div>
               <button
                 type="button"
@@ -659,7 +661,7 @@ export const DoctorPortal: React.FC = () => {
                     <th className="px-3 py-2 font-bold">LLM</th>
                     <th className="px-3 py-2 font-bold">DB</th>
                     <th className="px-3 py-2 font-bold">Email</th>
-                    <th className="px-3 py-2 font-bold">Cost</th>
+                    <th className="px-3 py-2 font-bold">Cost (₹)</th>
                     <th className="px-3 py-2 font-bold">Error Details</th>
                   </tr>
                 </thead>
@@ -707,7 +709,7 @@ export const DoctorPortal: React.FC = () => {
                               {log.email_status || '—'}
                             </span>
                           </td>
-                          <td className="px-3 py-2 whitespace-nowrap font-mono text-white/70">${Number(log.estimated_cost_usd ?? 0).toFixed(6)}</td>
+                          <td className="px-3 py-2 whitespace-nowrap font-mono text-emerald-400 font-medium">₹{(Number(log.estimated_cost_usd ?? log.llm_cost_usd ?? 0) * 86.5).toFixed(4)}</td>
                           <td className="px-3 py-2 max-w-xs break-words">
                             {log.error_details ? (
                               <div className="bg-red-950/40 border border-red-500/30 rounded px-2 py-1 text-red-200 text-[10px]">
