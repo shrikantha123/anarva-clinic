@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ========================================== -->
+  <!-- 1. Primary Homepage & Regional Clinic Hub  -->
+  <!-- ========================================== -->
+  <url>
+    <loc>https://anarvaclinic.com/</loc>
+    <lastmod>2026-10-01T08:00:00+05:30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://anarvaclinic.com/images/dr-ajith-kumar-anarva-clinic.jpg</image:loc>
+      <image:title>Dr. Ajith Kumar - Consultant at Anarva Clinic Kota Udupi</image:title>
+      <image:caption>Specialized holistic care for hair loss, severe acne, hives, and chronic scalp conditions in Kota, Udupi.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://anarvaclinic.com/images/anarva-clinic-kota.jpg</image:loc>
+      <image:title>Anarva Clinic Facility in Kota, Udupi</image:title>
+      <image:caption>Advanced dermatological and trichological clinic operating daily 10:00 AM to 1:30 PM.</image:caption>
+    </image:image>
+  </url>
+
+  <!-- ========================================== -->
+  <!-- 2. Certified Hair Loss Assessment Flow     -->
+  <!-- ========================================== -->
+  <url>
+    <loc>https://anarvaclinic.com/hair-loss-assessment/</loc>
+    <lastmod>2026-10-01T08:00:00+05:30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://anarvaclinic.com/images/hair-loss-assessment-hero.jpg</image:loc>
+      <image:title>Holistic Hair Loss Diagnostic Assessment - Anarva Clinic</image:title>
+      <image:caption>Online diagnostic intake for androgenic alopecia, telogen effluvium, and scalp analysis with Dr. Ajith Kumar.</image:caption>
+    </image:image>
+  </url>
+
+</urlset>
