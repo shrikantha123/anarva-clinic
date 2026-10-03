@@ -10,13 +10,13 @@ from app.schemas.analysis import AnalyzeResult
 logger = logging.getLogger("app.ai")
 
 MAX_OUTPUT_TOKENS = 4096
-MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-2.5-flash")
+MODEL_FALLBACKS = ("gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash")
 
 
 class Gemini:
     def __init__(self, client, model: str, timeout: float):
         self._client = client
-        self._model = "gemini-2.0-flash" if model == "gemini-2.5-flash" else model
+        self._model = model
         self._timeout = timeout
 
     def _models_to_try(self) -> list[str]:
@@ -50,7 +50,6 @@ class Gemini:
             raise AIError(504, "timeout", retryable=True) from None
         except errors.APIError as exc:
             latency_ms = int((time.perf_counter() - started) * 1000)
-            # Full verbose log for Render
             logger.error("Gemini API Error [%s]: %s (model: %s)", getattr(exc, 'code', 'unknown'), str(exc), model)
             record_operation("llm", "failed", latency_ms=latency_ms, llm_status="failed", model=model,
                              error_details=str(exc), route="/api/analyze", http_method="POST")
