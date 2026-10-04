@@ -18,7 +18,7 @@ PER_CALL_TIMEOUT_SECONDS = 22.0
 HEDGE_DELAY_SECONDS = 10.0
 
 # Independent free-tier quota buckets
-MODEL_FALLBACKS = ("gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.5-flash-lite")
+MODEL_FALLBACKS = ("gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite")
 
 
 class Gemini:
