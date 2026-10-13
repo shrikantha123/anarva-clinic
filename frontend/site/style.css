@@ -408,8 +408,8 @@ body.menu-open {
     inset: 0;
     width: 100%;                   /* card is as WIDE as its column ... */
     height: 100%;                  /* ... and as tall as the box */
-    object-fit: contain;
-    object-position: center;
+    object-fit: cover;
+    object-position: var(--hero-focus);   /* only empty wall (top) / table (bottom) is trimmed */
     border-radius: inherit;
     display: block;
 }
