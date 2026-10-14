@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Scanner - Anarva Clinic</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .scanner-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f8f8 0%, #ffffff 100%);
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scanner-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 150, 136, 0.15);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .scanner-header h1 {
+            color: #009688;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .scanner-header p {
+            color: #7F8C8D;
+            margin-bottom: 30px;
+        }
+
+        .amount-display {
+            font-size: 48px;
+            font-weight: 700;
+            color: #009688;
+            margin: 20px 0;
+        }
+
+        .qr-section {
+            margin: 30px 0;
+        }
+
+        .qr-image {
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+            border: 3px solid #009688;
+            border-radius: 16px;
+            padding: 10px;
+            background: white;
+        }
+
+        .qr-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .upi-instruction {
+            margin-top: 20px;
+            color: #2C3E50;
+            font-weight: 500;
+        }
+
+        .upi-logos {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .upi-logo {
+            background: #f8f9fa;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2C3E50;
+            font-weight: 500;
+        }
+
+        .payment-form {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2C3E50;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #009688;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #009688;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #00796B;
+        }
+
+        .payment-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .payment-info h3 {
+            color: #009688;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .payment-info p {
+            margin: 8px 0;
+            color: #2C3E50;
+            font-size: 14px;
+        }
+
+        .payment-info strong {
+            color: #009688;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #009688;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .scanner-container {
+                padding: 30px 20px;
+            }
+
+            .qr-image {
+                width: 240px;
+                height: 240px;
+            }
+
+            .amount-display {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanner-page">
+        <div class="scanner-container">
+            <div class="scanner-header">
+                <h1>Payment Scanner</h1>
+                <p>Scan QR code to complete your payment</p>
+            </div>
+
+            <div class="amount-display">₹500</div>
+            <p style="color: #7F8C8D;">Online Consultation Fee</p>
+
+            <div class="qr-section">
+                <div class="qr-image">
+                    <img src="assets/images/scanner.jpg" alt="Scan to pay">
+                </div>
+                <p class="upi-instruction">Scan with any UPI app</p>
+                <div class="upi-logos">
+                    <span class="upi-logo"><i class="fa-brands fa-google-pay"></i> GPay</span>
+                    <span class="upi-logo"><i class="fa-solid fa-mobile-screen"></i> PhonePe</span>
+                    <span class="upi-logo"><i class="fa-solid fa-wallet"></i> Paytm</span>
+                </div>
+            </div>
+
+            <div class="payment-form">
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" placeholder="Enter your phone number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionId">Transaction ID / UTR *</label>
+                    <input type="text" id="transactionId" placeholder="Enter transaction ID from payment app" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="concern">Your Concern (Optional)</label>
+                    <textarea id="concern" rows="3" placeholder="Briefly describe your concern"></textarea>
+                </div>
+
+                <button class="submit-btn" onclick="submitToWhatsApp()">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    Submit to WhatsApp
+                </button>
+            </div>
+
+            <div class="payment-info">
+                <h3>Payment Details</h3>
+                <p><strong>Amount:</strong> ₹500</p>
+                <p><strong>Purpose:</strong> Online Consultation</p>
+                <p><strong>Clinic:</strong> Anarva Clinic, Kota Udupi</p>
+            </div>
+
+            <a href="index.html" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function submitToWhatsApp() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const transactionId = document.getElementById('transactionId').value.trim();
+            const concern = document.getElementById('concern').value.trim();
+
+            // Validation
+            if (!fullName || !phone || !transactionId) {
+                alert('Please fill in all required fields (Name, Phone, Transaction ID)');
+                return;
+            }
+
+            if (phone.length < 10) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+
+            // Create WhatsApp message
+            const message = `*New Payment Submission*%0A%0A` +
+                `*Name:* ${fullName}%0A` +
+                `*Phone:* ${phone}%0A` +
+                `*Transaction ID:* ${transactionId}%0A` +
+                `*Amount:* ₹500%0A` +
+                `*Purpose:* Online Consultation%0A` +
+                `*Concern:* ${concern || 'Not specified'}%0A%0A` +
+                `Please verify and confirm my appointment.`;
+
+            // Clinic WhatsApp number
+            const whatsappNumber = '919902430424';
+
+            // Open WhatsApp
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>

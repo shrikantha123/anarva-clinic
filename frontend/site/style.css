@@ -112,6 +112,18 @@ button {
   color: var(--white);
 }
 
+.btn-whatsapp {
+  background: #25D366;
+  color: var(--white);
+  border: none;
+}
+
+.btn-whatsapp:hover {
+  background: #128C7E;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
 .section-title {
   text-align: center;
   margin-bottom: 40px;
