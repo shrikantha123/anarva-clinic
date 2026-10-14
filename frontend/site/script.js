@@ -282,7 +282,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookingForm = document.getElementById('bookingForm');
     const formStatus = document.getElementById('formStatus');
     const undoBtn = document.getElementById('undoBtn');
+    const consultationType = document.getElementById('consultationType');
+    const paymentSection = document.getElementById('paymentSection');
     let previousFormData = null;
+
+    // Show/hide payment section based on consultation type
+    if (consultationType && paymentSection) {
+        consultationType.addEventListener('change', (e) => {
+            if (e.target.value === 'Online Video Consult') {
+                paymentSection.style.display = 'block';
+                document.getElementById('transactionId').required = true;
+            } else {
+                paymentSection.style.display = 'none';
+                document.getElementById('transactionId').required = false;
+            }
+        });
+    }
 
     if (bookingForm) {
         bookingForm.addEventListener('submit', async (e) => {
@@ -291,6 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalBtnText = submitBtn.innerHTML;
 
             // Store previous form data for undo
+            const transactionId = document.getElementById('transactionId')?.value || '';
             previousFormData = {
                 fullName: document.getElementById('patientName').value,
                 email: document.getElementById('patientEmail').value,
@@ -298,7 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 consultationType: document.getElementById('consultationType').value,
                 preferredDate: document.getElementById('appointmentDate').value,
                 preferredTime: document.getElementById('appointmentTime').value,
-                concern: document.getElementById('patientConcern').value
+                concern: document.getElementById('patientConcern').value,
+                transactionId: transactionId
             };
 
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Appointment...';
@@ -312,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 preferredDate: previousFormData.preferredDate,
                 preferredTime: previousFormData.preferredTime,
                 concern: previousFormData.concern,
+                transactionId: previousFormData.transactionId,
                 submittedAt: new Date().toLocaleString()
             };
 
@@ -326,12 +344,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         date: formData.preferredDate,
                         time_slot: formData.preferredTime,
                         type: formData.consultationType,
-                        notes: `Email: ${formData.email}\nConcern: ${formData.concern}`
+                        notes: `Email: ${formData.email}\nConcern: ${formData.concern}\nTransaction ID: ${formData.transactionId}`
                     })
                 });
 
                 if (!response.ok) {
                     throw new Error(`Appointment request failed with status ${response.status}`);
+                }
+
+                // If online consultation, send to WhatsApp
+                if (formData.consultationType === 'Online Video Consult' && formData.transactionId) {
+                    const message = `*New Online Consultation Booking*%0A%0A` +
+                        `*Name:* ${formData.fullName}%0A` +
+                        `*Phone:* ${formData.phone}%0A` +
+                        `*Email:* ${formData.email}%0A` +
+                        `*Date:* ${formData.preferredDate}%0A` +
+                        `*Time:* ${formData.preferredTime}%0A` +
+                        `*Transaction ID:* ${formData.transactionId}%0A` +
+                        `*Amount:* ₹500%0A` +
+                        `*Concern:* ${formData.concern || 'Not specified'}%0A%0A` +
+                        `Please verify payment and confirm appointment.`;
+
+                    const whatsappUrl = `https://wa.me/919902430424?text=${message}`;
+                    window.open(whatsappUrl, '_blank');
                 }
 
                 formStatus.className = 'form-status-msg success';
