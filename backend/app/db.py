@@ -1,6 +1,7 @@
 """SQLite persistence: a few small functions, no ORM."""
 import json
 import sqlite3
+from datetime import datetime, timedelta
 from pathlib import Path
 
 PATIENTS = "patient_assessments"
@@ -94,6 +95,17 @@ def set_status(conn: sqlite3.Connection, table: str, status: str, where: str, pa
     return cursor.rowcount > 0
 
 
+def delete_old_records(conn: sqlite3.Connection, table: str, days: int = 30) -> int:
+    """Delete records older than specified days from the given table."""
+    cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+    with conn:
+        cursor = conn.execute(
+            f"DELETE FROM {table} WHERE created_at < ?",
+            (cutoff_date,)
+        )
+    return cursor.rowcount
+
+
 class SQLiteStore:
     """SQLite adapter used only by isolated backend tests."""
 
@@ -119,6 +131,10 @@ class SQLiteStore:
         if column not in {"patient_id", "id", "appointment_id"}:
             raise ValueError("Unknown record filter")
         return set_status(self._conn, table, status, f"{column} = ?", (value,))
+
+    def delete_old_records(self, table: str, days: int = 30) -> int:
+        """Delete records older than specified days."""
+        return delete_old_records(self._conn, table, days)
 
     def close(self) -> None:
         self._conn.close()

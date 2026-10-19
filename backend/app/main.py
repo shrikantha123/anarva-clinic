@@ -14,6 +14,7 @@ from starlette.staticfiles import StaticFiles
 from app.ai.gemini import Gemini
 from app.api import analyze, appointments, doctor, patients
 from app.config import APP_BASE, DIST_DIR, SITE_DIR, get_settings
+from app.db import PATIENTS, APPOINTMENTS
 from app.deps import get_db
 from app.errors import AppError, install_handlers
 from app.images import MAX_BYTES
@@ -23,6 +24,7 @@ from app.storage import SupabaseStore
 logger = logging.getLogger("app")
 MAX_BODY_BYTES = 3 * MAX_BYTES * 4 // 3 + 1024 * 1024  # three base64 photos plus JSON overhead
 SUPABASE_KEEPALIVE_INTERVAL_SECONDS = 20 * 60
+CLEANUP_INTERVAL_SECONDS = 24 * 60 * 60  # Run cleanup daily
 STARTED = time.monotonic()
 
 
@@ -44,6 +46,39 @@ async def _supabase_keepalive(store):
         await asyncio.sleep(SUPABASE_KEEPALIVE_INTERVAL_SECONDS)
 
 
+async def _cleanup_old_records(store):
+    """Periodically delete records older than 30 days from PATIENTS and APPOINTMENTS tables."""
+    while True:
+        started = time.perf_counter()
+        try:
+            if store:
+                # Delete old patient assessments
+                patients_deleted = await asyncio.to_thread(store.delete_old_records, PATIENTS, days=30)
+                # Delete old appointments
+                appointments_deleted = await asyncio.to_thread(store.delete_old_records, APPOINTMENTS, days=30)
+
+                if patients_deleted > 0 or appointments_deleted > 0:
+                    event(
+                        logger,
+                        "cleanup_old_records",
+                        logging.INFO,
+                        patients_deleted=patients_deleted,
+                        appointments_deleted=appointments_deleted,
+                        ms=int((time.perf_counter() - started) * 1000),
+                    )
+                else:
+                    event(logger, "cleanup_old_records_noop", ms=int((time.perf_counter() - started) * 1000))
+        except Exception as exc:
+            event(
+                logger,
+                "cleanup_old_records_failed",
+                logging.ERROR,
+                reason=type(exc).__name__,
+                ms=int((time.perf_counter() - started) * 1000),
+            )
+        await asyncio.sleep(CLEANUP_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     started = time.perf_counter()
@@ -61,6 +96,9 @@ async def lifespan(app: FastAPI):
     )
     keepalive_task = (
         asyncio.create_task(_supabase_keepalive(app.state.db)) if app.state.db is not None else None
+    )
+    cleanup_task = (
+        asyncio.create_task(_cleanup_old_records(app.state.db)) if app.state.db is not None else None
     )
     if app.state.ai is None:
         event(logger, "GEMINI_API_KEY is not set: /api/analyze is disabled", logging.WARNING)
@@ -85,6 +123,12 @@ async def lifespan(app: FastAPI):
         keepalive_task.cancel()
         try:
             await keepalive_task
+        except asyncio.CancelledError:
+            pass
+    if cleanup_task:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
         except asyncio.CancelledError:
             pass
     if app.state.db:

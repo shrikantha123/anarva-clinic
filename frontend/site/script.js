@@ -284,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const undoBtn = document.getElementById('undoBtn');
     const consultationType = document.getElementById('consultationType');
     const paymentSection = document.getElementById('paymentSection');
+    const payNowBtn = document.getElementById('payNowBtn');
     let previousFormData = null;
 
     // Show/hide payment section based on consultation type
@@ -296,6 +297,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 paymentSection.style.display = 'none';
                 document.getElementById('transactionId').required = false;
             }
+        });
+    }
+
+    // Pay Now button - triggers UPI payment link
+    if (payNowBtn) {
+        payNowBtn.addEventListener('click', () => {
+            const fullName = document.getElementById('patientName').value.trim();
+            const phone = document.getElementById('patientPhone').value.trim();
+            const email = document.getElementById('patientEmail').value.trim();
+            const preferredDate = document.getElementById('appointmentDate').value;
+            const preferredTime = document.getElementById('appointmentTime').value;
+            const concern = document.getElementById('patientConcern').value.trim();
+
+            if (!fullName || !phone) {
+                alert('Please fill in your name and phone number before making payment');
+                return;
+            }
+
+            // Create UPI payment link with prefilled details
+            const upiId = '9902430424-3@ybl';
+            const amount = '500';
+            const name = encodeURIComponent(fullName);
+            const phoneEnc = encodeURIComponent(phone);
+            const message = encodeURIComponent(`Online consultation - ${fullName} - ${phone}`);
+
+            const upiLink = `upi://pay?pa=${upiId}&pn=Anarva%20Clinic&am=${amount}&cu=INR&tn=${message}`;
+
+            // Try to open UPI app
+            window.location.href = upiLink;
+
+            // Fallback: show message with instructions
+            setTimeout(() => {
+                alert(`Payment initiated!\n\nUPI ID: ${upiId}\nAmount: ₹${amount}\n\nPlease complete payment in your UPI app and enter the Transaction ID below.`);
+            }, 1000);
         });
     }
 

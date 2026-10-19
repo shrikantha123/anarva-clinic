@@ -23,6 +23,8 @@ class RecordStore(Protocol):
 
     def set_status(self, table: str, status: str, column: str, value: str) -> bool: ...
 
+    def delete_old_records(self, table: str, days: int = 30) -> int: ...
+
     def close(self) -> None: ...
 
 
@@ -133,6 +135,54 @@ class SupabaseStore:
             record={"status": status}, prefer="return=representation",
         )
         return bool(rows)
+
+    def delete_old_records(self, table: str, days: int = 30) -> int:
+        """Delete records older than specified days from Supabase."""
+        from datetime import datetime, timedelta
+        cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+
+        try:
+            # First, fetch old records
+            old_records = self._request(
+                "GET", table,
+                params={"select": "*", "created_at": f"lt.{cutoff_date}"}
+            )
+
+            deleted_count = 0
+            for record in old_records:
+                # Get the appropriate ID column based on table
+                id_column = "patient_id" if table == db.PATIENTS else "id"
+                record_id = record.get(id_column)
+
+                if record_id:
+                    try:
+                        self._request(
+                            "DELETE", table,
+                            params={id_column: f"eq.{record_id}"},
+                            headers={"Prefer": "return=minimal"}
+                        )
+                        deleted_count += 1
+                    except Exception as exc:
+                        event(
+                            logger,
+                            "delete_record_failed",
+                            logging.WARNING,
+                            table=table,
+                            id=record_id,
+                            reason=type(exc).__name__,
+                        )
+
+            return deleted_count
+        except Exception as exc:
+            event(
+                logger,
+                "delete_old_records_failed",
+                logging.ERROR,
+                table=table,
+                days=days,
+                reason=type(exc).__name__,
+            )
+            return 0
 
     def close(self) -> None:
         self._client.close()
