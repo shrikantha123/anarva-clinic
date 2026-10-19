@@ -142,13 +142,26 @@ class SupabaseStore:
         cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
 
         try:
-            # First, fetch old records
+            # First, fetch old records to know what we're deleting
             old_records = self._request(
                 "GET", table,
                 params={"select": "*", "created_at": f"lt.{cutoff_date}"}
             )
 
+            if not old_records:
+                event(
+                    logger,
+                    "delete_old_records_noop",
+                    logging.INFO,
+                    table=table,
+                    days=days,
+                    message="No old records found",
+                )
+                return 0
+
             deleted_count = 0
+            failed_count = 0
+
             for record in old_records:
                 # Get the appropriate ID column based on table
                 id_column = "patient_id" if table == db.PATIENTS else "id"
@@ -156,15 +169,27 @@ class SupabaseStore:
 
                 if record_id:
                     try:
-                        # Use DELETE with the ID filter
+                        # Delete by ID using the _request method
                         response = self._client.request(
                             "DELETE", table,
                             params={id_column: f"eq.{record_id}"},
                             headers={"Prefer": "return=minimal"}
                         )
-                        response.raise_for_status()
-                        deleted_count += 1
+                        # Check if deletion was successful (204 No Content)
+                        if response.status_code == 204:
+                            deleted_count += 1
+                        else:
+                            failed_count += 1
+                            event(
+                                logger,
+                                "delete_record_unexpected_status",
+                                logging.WARNING,
+                                table=table,
+                                id=record_id,
+                                status=response.status_code,
+                            )
                     except Exception as exc:
+                        failed_count += 1
                         event(
                             logger,
                             "delete_record_failed",
@@ -176,11 +201,13 @@ class SupabaseStore:
 
             event(
                 logger,
-                "delete_old_records_success",
+                "delete_old_records_complete",
                 logging.INFO,
                 table=table,
                 days=days,
+                total_found=len(old_records),
                 deleted_count=deleted_count,
+                failed_count=failed_count,
             )
             return deleted_count
         except Exception as exc:
