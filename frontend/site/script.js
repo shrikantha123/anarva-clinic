@@ -292,10 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
         consultationType.addEventListener('change', (e) => {
             if (e.target.value === 'Online Video Consult') {
                 paymentSection.style.display = 'block';
-                document.getElementById('transactionId').required = true;
             } else {
                 paymentSection.style.display = 'none';
-                document.getElementById('transactionId').required = false;
             }
         });
     }
@@ -341,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalBtnText = submitBtn.innerHTML;
 
             // Store previous form data for undo
-            const transactionId = document.getElementById('transactionId')?.value || '';
             previousFormData = {
                 fullName: document.getElementById('patientName').value,
                 email: document.getElementById('patientEmail').value,
@@ -349,8 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 consultationType: document.getElementById('consultationType').value,
                 preferredDate: document.getElementById('appointmentDate').value,
                 preferredTime: document.getElementById('appointmentTime').value,
-                concern: document.getElementById('patientConcern').value,
-                transactionId: transactionId
+                concern: document.getElementById('patientConcern').value
             };
 
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Appointment...';
@@ -364,7 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 preferredDate: previousFormData.preferredDate,
                 preferredTime: previousFormData.preferredTime,
                 concern: previousFormData.concern,
-                transactionId: previousFormData.transactionId,
                 submittedAt: new Date().toLocaleString()
             };
 
@@ -379,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         date: formData.preferredDate,
                         time_slot: formData.preferredTime,
                         type: formData.consultationType,
-                        notes: `Email: ${formData.email}\nConcern: ${formData.concern}\nTransaction ID: ${formData.transactionId}`
+                        notes: `Email: ${formData.email}\nConcern: ${formData.concern}`
                     })
                 });
 
@@ -388,14 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // If online consultation, send to WhatsApp
-                if (formData.consultationType === 'Online Video Consult' && formData.transactionId) {
+                if (formData.consultationType === 'Online Video Consult') {
                     const message = `*New Online Consultation Booking*%0A%0A` +
                         `*Name:* ${formData.fullName}%0A` +
                         `*Phone:* ${formData.phone}%0A` +
                         `*Email:* ${formData.email}%0A` +
                         `*Date:* ${formData.preferredDate}%0A` +
                         `*Time:* ${formData.preferredTime}%0A` +
-                        `*Transaction ID:* ${formData.transactionId}%0A` +
                         `*Amount:* ₹500%0A` +
                         `*Concern:* ${formData.concern || 'Not specified'}%0A%0A` +
                         `Please verify payment and confirm appointment.`;

@@ -156,11 +156,13 @@ class SupabaseStore:
 
                 if record_id:
                     try:
-                        self._request(
+                        # Use DELETE with the ID filter
+                        response = self._client.request(
                             "DELETE", table,
                             params={id_column: f"eq.{record_id}"},
                             headers={"Prefer": "return=minimal"}
                         )
+                        response.raise_for_status()
                         deleted_count += 1
                     except Exception as exc:
                         event(
@@ -172,6 +174,14 @@ class SupabaseStore:
                             reason=type(exc).__name__,
                         )
 
+            event(
+                logger,
+                "delete_old_records_success",
+                logging.INFO,
+                table=table,
+                days=days,
+                deleted_count=deleted_count,
+            )
             return deleted_count
         except Exception as exc:
             event(

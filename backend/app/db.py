@@ -103,6 +103,7 @@ def delete_old_records(conn: sqlite3.Connection, table: str, days: int = 30) -> 
             f"DELETE FROM {table} WHERE created_at < ?",
             (cutoff_date,)
         )
+        conn.commit()
     return cursor.rowcount
 
 
