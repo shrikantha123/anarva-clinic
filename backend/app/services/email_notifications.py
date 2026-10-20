@@ -24,29 +24,40 @@ def _send_email(subject: str, body: str) -> None:
 
     # 1. Prefer token from Render Environment Variable (GMAIL_TOKEN_JSON)
     env_token = getattr(settings, "gmail_token_json", None) or os.getenv("GMAIL_TOKEN_JSON")
+    logger.info("Checking GMAIL_TOKEN_JSON: %s", "FOUND" if env_token else "NOT FOUND")
+
     if env_token:
         try:
             token_data = json.loads(env_token) if isinstance(env_token, str) else env_token
+            logger.info("GMAIL_TOKEN_JSON parsed successfully, creating credentials")
             credentials = Credentials.from_authorized_user_info(token_data, [GMAIL_SEND_SCOPE])
+            logger.info("Credentials created from environment variable")
         except Exception as err:
             logger.error("Failed to parse GMAIL_TOKEN_JSON environment variable: %s", err)
+            logger.error("GMAIL_TOKEN_JSON content (first 100 chars): %s", str(env_token)[:100])
 
     # 2. Fall back to local file if running on development machine
     if credentials is None and settings.gmail_token_file.is_file():
+        logger.info("Falling back to local file: %s", settings.gmail_token_file)
         credentials = Credentials.from_authorized_user_file(
             str(settings.gmail_token_file), [GMAIL_SEND_SCOPE]
         )
+        logger.info("Credentials created from local file")
 
     if credentials is None:
+        logger.error("No Gmail credentials found - neither env var nor local file")
         raise RuntimeError(
             "Gmail is not authorized on this instance. Add GMAIL_TOKEN_JSON in Render Environment Variables "
             "or place secrets/gmail-token.json locally."
         )
 
     if credentials.expired and credentials.refresh_token:
+        logger.info("Token expired, refreshing...")
         credentials.refresh(Request())
+        logger.info("Token refreshed successfully")
 
     if not credentials.valid:
+        logger.error("Gmail OAuth token is expired or invalid. Please refresh the token.")
         raise RuntimeError("Gmail OAuth token is expired or invalid. Please refresh the token.")
 
     message = EmailMessage()

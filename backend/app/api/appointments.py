@@ -76,3 +76,23 @@ def test_email():
             status_code=500,
             detail=f"Email test failed: {type(exc).__name__}: {str(exc)}"
         )
+
+
+@router.get("/check-email-config", dependencies=[DoctorOnly])
+def check_email_config():
+    """Check email configuration without sending an email."""
+    import os
+    from app.config import get_settings
+
+    settings = get_settings()
+    env_token = getattr(settings, "gmail_token_json", None) or os.getenv("GMAIL_TOKEN_JSON")
+    file_exists = settings.gmail_token_file.is_file()
+
+    return {
+        "gmail_token_json_env": "FOUND" if env_token else "NOT FOUND",
+        "gmail_token_file": str(settings.gmail_token_file),
+        "gmail_token_file_exists": file_exists,
+        "gmail_notification_email": settings.gmail_notification_email,
+        "gmail_sender_email": settings.gmail_sender_email,
+        "env_token_preview": str(env_token)[:100] if env_token else None,
+    }
