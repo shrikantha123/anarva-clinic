@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app import db as store
 from app.deps import DB, DoctorOnly
@@ -50,3 +50,29 @@ def list_appointments(db: DB):
 def update_status(appointment_id: str, body: AppointmentStatusIn, db: DB):
     records.set_appointment_status(db, appointment_id, body.status)
     return {"id": appointment_id, "status": body.status}
+
+
+@router.post("/test-email", dependencies=[DoctorOnly])
+def test_email():
+    """Test endpoint to verify email configuration is working."""
+    test_appointment = {
+        "appointment_id": "TEST-" + str(int(__import__("time").time())),
+        "patient_name": "Test Patient",
+        "patient_phone": "+919876543210",
+        "date": "2026-10-25",
+        "time_slot": "10:00 AM",
+        "type": "In-Person Consultation",
+        "created_at": __import__("datetime").datetime.now().isoformat(),
+    }
+    try:
+        email_notifications.notify_appointment_booked(test_appointment)
+        return {
+            "status": "success",
+            "message": "Test email sent successfully",
+            "appointment_id": test_appointment["appointment_id"]
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Email test failed: {type(exc).__name__}: {str(exc)}"
+        )
