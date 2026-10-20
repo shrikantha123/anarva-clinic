@@ -163,6 +163,18 @@ class SupabaseStore:
             failed_count = 0
 
             for record in old_records:
+                # Ensure record is a dict
+                if not isinstance(record, dict):
+                    failed_count += 1
+                    event(
+                        logger,
+                        "delete_record_invalid_type",
+                        logging.WARNING,
+                        table=table,
+                        reason=f"Expected dict, got {type(record).__name__}",
+                    )
+                    continue
+
                 # Get the appropriate ID column based on table
                 id_column = "patient_id" if table == db.PATIENTS else "id"
                 record_id = record.get(id_column)
@@ -217,7 +229,7 @@ class SupabaseStore:
                 logging.ERROR,
                 table=table,
                 days=days,
-                reason=type(exc).__name__,
+                reason=f"{type(exc).__name__}: {str(exc)}",
             )
             return 0
 
