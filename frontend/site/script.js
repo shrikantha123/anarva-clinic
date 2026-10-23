@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
-            
+
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
                 targetElement.scrollIntoView({
@@ -110,31 +110,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Booking Type Slot Sync
     const typeSelect = document.getElementById('consultationType');
     const timeSelect = document.getElementById('appointmentTime');
-    
+
+    const clinicSlots = `
+        <option value="">Select Time Slot</option>
+        <option value="10:00 AM">10:00 AM - 10:30 AM</option>
+        <option value="11:00 AM">11:00 AM - 11:30 AM</option>
+        <option value="12:00 PM">12:00 PM - 12:30 PM</option>
+        <option value="01:00 PM">01:00 PM - 01:30 PM</option>
+    `;
+    const videoSlots = `
+        <option value="">Select Video Slot</option>
+        <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
+        <option value="11:30 AM - 12:00 PM">11:30 AM - 12:00 PM</option>
+        <option value="12:30 PM - 01:00 PM">12:30 PM - 01:00 PM</option>
+    `;
+
     if (typeSelect && timeSelect) {
         typeSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'Online Video Consult') {
-                timeSelect.innerHTML = `
-                    <option value="">Select Video Slot</option>
-                    <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
-                    <option value="11:30 AM - 12:00 PM">11:30 AM - 12:00 PM</option>
-                    <option value="12:30 PM - 01:00 PM">12:30 PM - 01:00 PM</option>
-                `;
-            } else {
-                timeSelect.innerHTML = `
-                    <option value="">Select Time Slot</option>
-                    <option value="10:00 AM">10:00 AM - 10:30 AM</option>
-                    <option value="11:00 AM">11:00 AM - 11:30 AM</option>
-                    <option value="12:00 PM">12:00 PM - 12:30 PM</option>
-                    <option value="01:00 PM">01:00 PM - 01:30 PM</option>
-                `;
-            }
+            timeSelect.innerHTML = e.target.value === 'Online Video Consult' ? videoSlots : clinicSlots;
         });
     }
 
     // ===========================================================================
-    // Appointment Database Submission Handler
+    // Results Lightbox Modal
     // ===========================================================================
+    const resultModal = document.getElementById('resultModal');
     const modalImg = document.getElementById('modalImg');
     const modalClose = document.querySelector('.modal-close');
     const modalBackdrop = document.querySelector('.modal-backdrop');
@@ -239,9 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // Scroll-Reveal Animations (IntersectionObserver)
     // ==========================================================================
-    const animClasses = ['anim-ready', 'anim-left', 'anim-right'];
-
-    // Tag elements to animate
     const tagForAnim = (selector, cls, delayPrefix) => {
         document.querySelectorAll(selector).forEach((el, i) => {
             el.classList.add(cls);
@@ -274,63 +271,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================================================
-    // Google Sheets Form Submission Handler
+    // Appointment Booking
     // ==========================================================================
-    // Replace GOOGLE_SHEETS_WEB_APP_URL with your deployed Google Apps Script URL
-    const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz_EXAMPLE_DEPLOYMENT_ID/exec';
+    const API_URL = 'https://anarva-clinic.onrender.com';
+
+    // Wake the backend (Render free tier sleeps when idle)
+    fetch(`${API_URL}/health`).catch(() => {});
 
     const bookingForm = document.getElementById('bookingForm');
     const formStatus = document.getElementById('formStatus');
     const undoBtn = document.getElementById('undoBtn');
-    const consultationType = document.getElementById('consultationType');
-    const paymentSection = document.getElementById('paymentSection');
-    const payNowBtn = document.getElementById('payNowBtn');
     let previousFormData = null;
-
-    // Show/hide payment section based on consultation type
-    if (consultationType && paymentSection) {
-        consultationType.addEventListener('change', (e) => {
-            if (e.target.value === 'Online Video Consult') {
-                paymentSection.style.display = 'block';
-            } else {
-                paymentSection.style.display = 'none';
-            }
-        });
-    }
-
-    // Pay Now button - triggers UPI payment link
-    if (payNowBtn) {
-        payNowBtn.addEventListener('click', () => {
-            const fullName = document.getElementById('patientName').value.trim();
-            const phone = document.getElementById('patientPhone').value.trim();
-            const email = document.getElementById('patientEmail').value.trim();
-            const preferredDate = document.getElementById('appointmentDate').value;
-            const preferredTime = document.getElementById('appointmentTime').value;
-            const concern = document.getElementById('patientConcern').value.trim();
-
-            if (!fullName || !phone) {
-                alert('Please fill in your name and phone number before making payment');
-                return;
-            }
-
-            // Create UPI payment link with prefilled details
-            const upiId = '9902430424-3@ybl';
-            const amount = '500';
-            const name = encodeURIComponent(fullName);
-            const phoneEnc = encodeURIComponent(phone);
-            const message = encodeURIComponent(`Online consultation - ${fullName} - ${phone}`);
-
-            const upiLink = `upi://pay?pa=${upiId}&pn=Anarva%20Clinic&am=${amount}&cu=INR&tn=${message}`;
-
-            // Try to open UPI app
-            window.location.href = upiLink;
-
-            // Fallback: show message with instructions
-            setTimeout(() => {
-                alert(`Payment initiated!\n\nUPI ID: ${upiId}\nAmount: ₹${amount}\n\nPlease complete payment in your UPI app and enter the Transaction ID below.`);
-            }, 1000);
-        });
-    }
 
     if (bookingForm) {
         bookingForm.addEventListener('submit', async (e) => {
@@ -352,19 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Appointment...';
             submitBtn.disabled = true;
 
-            const formData = {
-                fullName: previousFormData.fullName,
-                email: previousFormData.email,
-                phone: previousFormData.phone,
-                consultationType: previousFormData.consultationType,
-                preferredDate: previousFormData.preferredDate,
-                preferredTime: previousFormData.preferredTime,
-                concern: previousFormData.concern,
-                submittedAt: new Date().toLocaleString()
-            };
+            const formData = { ...previousFormData };
 
             try {
-                const response = await fetch('https://anarva-clinic.onrender.com/api/appointments',{
+                const response = await fetch(`${API_URL}/api/appointments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -379,32 +321,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Appointment request failed with status ${response.status}`);
+                    const errText = await response.text();
+                    console.error('Server said:', response.status, errText);
+                    throw new Error(`Status ${response.status}: ${errText}`);
                 }
 
-                // If online consultation, send to WhatsApp
+                // Online consultation: send details to the clinic on WhatsApp
                 if (formData.consultationType === 'Online Video Consult') {
-                    const message = `*New Online Consultation Booking*%0A%0A` +
-                        `*Name:* ${formData.fullName}%0A` +
-                        `*Phone:* ${formData.phone}%0A` +
-                        `*Email:* ${formData.email}%0A` +
-                        `*Date:* ${formData.preferredDate}%0A` +
-                        `*Time:* ${formData.preferredTime}%0A` +
-                        `*Amount:* ₹500%0A` +
-                        `*Concern:* ${formData.concern || 'Not specified'}%0A%0A` +
-                        `Please verify payment and confirm appointment.`;
-
-                    const whatsappUrl = `https://wa.me/919902430424?text=${message}`;
-                    window.open(whatsappUrl, '_blank');
+                    const message = encodeURIComponent(
+                        `*New Online Consultation Booking*\n\n` +
+                        `*Name:* ${formData.fullName}\n` +
+                        `*Phone:* ${formData.phone}\n` +
+                        `*Email:* ${formData.email}\n` +
+                        `*Date:* ${formData.preferredDate}\n` +
+                        `*Time:* ${formData.preferredTime}\n` +
+                        `*Concern:* ${formData.concern || 'Not specified'}\n\n` +
+                        `Please confirm my appointment.`
+                    );
+                    window.open(`https://wa.me/919902430424?text=${message}`, '_blank');
                 }
 
                 formStatus.className = 'form-status-msg success';
                 formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Appointment request saved. The clinic team will confirm your slot.';
                 bookingForm.reset();
+                if (timeSelect) timeSelect.innerHTML = clinicSlots;
             } catch (err) {
                 console.error('Submission Error:', err);
                 formStatus.className = 'form-status-msg error';
-                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Could not save the appointment. Please try again or call the clinic.';
+                formStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Could not save the appointment (${err.message}). Please try again or call the clinic.`;
             } finally {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
@@ -419,6 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('patientEmail').value = previousFormData.email;
                     document.getElementById('patientPhone').value = previousFormData.phone;
                     document.getElementById('consultationType').value = previousFormData.consultationType;
+                    if (timeSelect) {
+                        timeSelect.innerHTML = previousFormData.consultationType === 'Online Video Consult' ? videoSlots : clinicSlots;
+                    }
                     document.getElementById('appointmentDate').value = previousFormData.preferredDate;
                     document.getElementById('appointmentTime').value = previousFormData.preferredTime;
                     document.getElementById('patientConcern').value = previousFormData.concern;
