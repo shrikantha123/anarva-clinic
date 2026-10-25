@@ -16,9 +16,11 @@ router = APIRouter(prefix="/doctor", tags=["doctor"])
 
 @router.post("/login", response_model=LoginOut)
 def login(body: LoginIn, request: Request, response: Response, settings: SettingsDep):
-    client_ip = request.client.host if request.client else "unknown"
+    forwarded = request.headers.get("x-forwarded-for", "").split(",")[-1].strip()
+    client_ip = forwarded or (request.client.host if request.client else "unknown")
     token = auth.login(settings, body.username, body.password, client_ip)
-    # The session lives in an HttpOnly cookie, so the frontend needs no token handling.
+    # Keep the cookie for browsers that support cross-site cookies and return the
+    # same short-lived token for the Authorization-header fallback.
     response.set_cookie(
         auth.COOKIE_NAME,
         token,
@@ -28,7 +30,7 @@ def login(body: LoginIn, request: Request, response: Response, settings: Setting
         secure=True,
         path="/api",
     )
-    return {"doctor": auth.DOCTOR_PROFILE}
+    return {"doctor": auth.DOCTOR_PROFILE, "token": token}
 
 
 @router.get("/assessments", response_model=PatientList, dependencies=[DoctorOnly])

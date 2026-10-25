@@ -29,13 +29,13 @@ import {
   PhotoData,
   AnalysisResult,
 } from '../types';
-import { apiFetch } from '../lib/api';
+import { apiFetch, getAuthToken, setAuthToken } from '../lib/api';
 import { AnarvaLogo } from './AnarvaLogo';
 import { ReportStep } from './ReportStep';
 import { sound } from '../utils/audio';
 
 export const DoctorPortal: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAuthToken()));
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -51,6 +51,8 @@ export const DoctorPortal: React.FC = () => {
   // Assessments & Appointments Data
   const [assessments, setAssessments] = useState<PatientAssessmentRecord[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [systemLogs, setSystemLogs] = useState<any[]>([]);
 
   // Patient whose exact report is currently opened
@@ -65,6 +67,8 @@ export const DoctorPortal: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
+    setAppointmentsError(null);
+    setAuthToken(null);
     setLoading(true);
 
     try {
@@ -79,6 +83,7 @@ export const DoctorPortal: React.FC = () => {
         setLoginError(data.error || 'Invalid credentials');
         sound.playStep();
       } else {
+        setAuthToken(typeof data.token === 'string' ? data.token : null);
         setIsAuthenticated(true);
         sound.playSuccess();
       }
@@ -107,15 +112,45 @@ export const DoctorPortal: React.FC = () => {
   };
 
   const loadAppointments = async () => {
+    setAppointmentsLoading(true);
+    setAppointmentsError(null);
     try {
       const res = await apiFetch('/api/appointments');
-      const data = await res.json();
-      if (data.appointments) {
-        setAppointments(data.appointments);
+      if (res.status === 401) {
+        setAuthToken(null);
+        setAppointments([]);
+        setIsAuthenticated(false);
+        setLoginError('Your admin session could not be verified. Please sign in again.');
+        return;
       }
+      if (!res.ok) {
+        setAppointmentsError(`Could not load appointments (HTTP ${res.status}). Please retry.`);
+        return;
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data.appointments)) {
+        setAppointmentsError('The server returned an invalid appointments response. Please retry.');
+        return;
+      }
+
+      setAppointments(data.appointments);
     } catch (err) {
       console.error('Error fetching appointments:', err);
+      setAppointmentsError('Could not connect to the appointments service. Please retry.');
+    } finally {
+      setAppointmentsLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setIsAuthenticated(false);
+    setAssessments([]);
+    setAppointments([]);
+    setAppointmentsError(null);
+    setSystemLogs([]);
+    setLoginError(null);
   };
 
   const loadSystemLogs = async () => {
@@ -393,7 +428,7 @@ export const DoctorPortal: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setIsAuthenticated(false)}
+            onClick={handleLogout}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/30 text-red-300 text-xs font-bold transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -428,7 +463,10 @@ export const DoctorPortal: React.FC = () => {
               }`}
             >
               <Calendar className="w-4 h-4" />
-              <span>Appointments Database ({appointments.length})</span>
+              <span>
+                Appointments Database
+                {appointmentsLoading ? ' (loading…)' : appointmentsError ? '' : ` (${appointments.length})`}
+              </span>
             </button>
 
             <button
@@ -551,7 +589,22 @@ export const DoctorPortal: React.FC = () => {
 
         {activeTab === 'appointments' && (
           <div className="flex flex-col gap-3">
-            {filteredAppointments.length === 0 ? (
+            {appointmentsLoading ? (
+              <div role="status" className="p-12 text-center text-xs text-white/60 bg-[#121B1E] rounded-2xl border border-white/10">
+                Loading appointment records…
+              </div>
+            ) : appointmentsError ? (
+              <div role="alert" className="p-6 text-center text-xs text-red-200 bg-red-950/40 rounded-2xl border border-red-500/30">
+                <p>{appointmentsError}</p>
+                <button
+                  type="button"
+                  onClick={loadAppointments}
+                  className="mt-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : filteredAppointments.length === 0 ? (
               <div className="p-12 text-center text-xs text-white/50 bg-[#121B1E] rounded-2xl border border-white/10">
                 No appointment bookings found. When patients click "Book an Appointment", records appear here.
               </div>
