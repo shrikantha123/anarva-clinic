@@ -27,9 +27,18 @@ def get_ai(request: Request) -> Gemini:
 
 
 def require_doctor(request: Request, settings: SettingsDep) -> None:
-    token = request.cookies.get(auth.COOKIE_NAME, "")
-    if not auth.verify_token(settings.secret_key.get_secret_value(), token):
-        raise AppError(401, "Doctor login required")
+    secret = settings.secret_key.get_secret_value()
+    cookie_token = request.cookies.get(auth.COOKIE_NAME, "")
+    if auth.verify_token(secret, cookie_token):
+        return
+
+    authorization = request.headers.get("authorization", "")
+    if authorization.lower().startswith("bearer "):
+        bearer_token = authorization[7:].strip()
+        if auth.verify_token(secret, bearer_token):
+            return
+
+    raise AppError(401, "Doctor login required")
 
 
 DB = Annotated[RecordStore, Depends(get_db)]

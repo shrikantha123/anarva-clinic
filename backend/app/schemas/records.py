@@ -128,3 +128,4 @@ class DoctorProfile(BaseModel):
 class LoginOut(BaseModel):
     success: bool = True
     doctor: DoctorProfile
+    token: str | None = None

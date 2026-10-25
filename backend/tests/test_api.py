@@ -301,6 +301,55 @@ def test_doctor_routes_require_session(client):
     assert client.get("/api/doctor/assessments").status_code == 401
 
 
+def test_appointment_list_accepts_bearer_token_without_working_cookie(client):
+    future_date = (dt.date.today() + dt.timedelta(days=30)).isoformat()
+    booked = client.post("/api/appointments", json={"date": future_date})
+    assert booked.status_code == 200
+
+    login = client.post(
+        "/api/doctor/login",
+        json={"username": "doctor@anarvaclinic.com", "password": "pytest-doctor-secret"},
+    )
+    assert login.status_code == 200
+    token = login.json()["token"]
+    assert token
+
+    # Simulate a browser that rejects the cookie (or retains an expired one).
+    client.cookies.clear()
+    client.cookies.set("anarva_doctor", "expired-session")
+    listed = client.get(
+        "/api/appointments",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert listed.status_code == 200
+    assert listed.json()["appointments"][0]["appointment_id"] == booked.json()["appointment"]["appointment_id"]
+
+
+def test_cors_allows_clinic_origin_and_rejects_unlisted_origins(client):
+    allowed = client.options(
+        "/api/appointments",
+        headers={
+            "Origin": "https://anarvaclinic.com",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
+        },
+    )
+    assert allowed.status_code == 200
+    assert allowed.headers["access-control-allow-origin"] == "https://anarvaclinic.com"
+
+    rejected = client.options(
+        "/api/appointments",
+        headers={
+            "Origin": "https://unlisted.example",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
+        },
+    )
+    assert rejected.status_code == 400
+    assert "access-control-allow-origin" not in rejected.headers
+
+
 def test_appointment_booking(client):
     future_date = (dt.date.today() + dt.timedelta(days=30)).isoformat()
     response = client.post(

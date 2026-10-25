@@ -221,7 +221,11 @@ def create_app() -> FastAPI:
   # CORS Middleware Configuration for Render & Custom Domains
     app.add_middleware(
         CORSMiddleware,
-        allow_origin_regex=r"^https?://.*",
+        allow_origins=[
+            "https://anarvaclinic.com",
+            "https://www.anarvaclinic.com",
+            "http://localhost:5173",
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
