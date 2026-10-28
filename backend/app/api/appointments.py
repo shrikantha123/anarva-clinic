@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app import db as store
+from app.config import get_settings
 from app.deps import DB, DoctorOnly
 from app.schemas.records import (
     AppointmentBooked,
@@ -9,7 +10,7 @@ from app.schemas.records import (
     AppointmentStatusIn,
     AppointmentStatusUpdated,
 )
-from app.services import email_notifications, records
+from app.services import brevo_email, email_notifications, records
 
 router = APIRouter(tags=["appointments"])
 
@@ -37,7 +38,13 @@ def book(body: AppointmentIn, background_tasks: BackgroundTasks, db: DB):
         email_status="queued",
     )
 
-    background_tasks.add_task(email_notifications.notify_appointment_booked, appointment)
+    # Use Brevo if configured, otherwise fall back to Gmail
+    settings = get_settings()
+    if settings.brevo_api_key:
+        background_tasks.add_task(brevo_email.notify_appointment_booked_brevo, appointment)
+    else:
+        background_tasks.add_task(email_notifications.notify_appointment_booked, appointment)
+    
     return {"appointment": appointment}
 
 

@@ -53,12 +53,30 @@ def _send_email(subject: str, body: str) -> None:
 
     if credentials.expired and credentials.refresh_token:
         logger.info("Token expired, refreshing...")
-        credentials.refresh(Request())
-        logger.info("Token refreshed successfully")
+        try:
+            credentials.refresh(Request())
+            logger.info("Token refreshed successfully")
+            
+            # Save refreshed token back to environment if possible
+            # Note: Render env vars are static, so this won't update them
+            # But it will work for local development with file-based tokens
+            if settings.gmail_token_file.is_file():
+                settings.gmail_token_file.write_text(credentials.to_json(), encoding="utf-8")
+                logger.info("Refreshed token saved to local file")
+        except Exception as refresh_err:
+            logger.error("Failed to refresh token: %s", refresh_err)
+            raise RuntimeError(f"Token refresh failed: {refresh_err}") from refresh_err
 
     if not credentials.valid:
-        logger.error("Gmail OAuth token is expired or invalid. Please refresh the token.")
-        raise RuntimeError("Gmail OAuth token is expired or invalid. Please refresh the token.")
+        logger.error("Gmail OAuth token is expired or invalid. No refresh token available.")
+        logger.error("This usually happens when:")
+        logger.error("1. The initial authorization didn't include a refresh token")
+        logger.error("2. The refresh token was revoked by Google")
+        logger.error("3. The token copied to Render didn't include the refresh_token field")
+        raise RuntimeError(
+            "Gmail OAuth token is expired and cannot be refreshed. "
+            "Re-run authorization with: python -m app.gmail_auth"
+        )
 
     message = EmailMessage()
     message["To"] = settings.gmail_notification_email
@@ -87,18 +105,62 @@ def _send_notification(event: str, subject: str, body: str, resource_id: str | N
             http_method="EMAIL",
             error_details=None,
         )
-    except Exception as exc:
-        logger.exception("Gmail %s notification could not be sent", event)
+        logger.info("Gmail %s notification sent successfully for resource: %s", event, resource_id)
+    except RuntimeError as exc:
+        # Configuration errors - log but don't crash
+        logger.error("Gmail configuration error for %s notification: %s", event, exc)
         record_operation(
             "email",
             "failed",
             latency_ms=int((datetime.now() - started).total_seconds() * 1000),
             resource_id=resource_id,
-            email_status="failed",
+            email_status="config_error",
             route="/notifications",
             http_method="EMAIL",
-            error_details=f"{type(exc).__name__}: {exc}",
+            error_details=f"Configuration Error: {exc}",
         )
+    except Exception as exc:
+        # Network/API errors - log but don't crash
+        error_msg = str(exc).lower()
+        error_details = f"{type(exc).__name__}: {exc}"
+        
+        # Detect specific Gmail OAuth errors
+        if "invalid grant" in error_msg or "refresh token" in error_msg:
+            logger.error("Gmail OAuth token expired or invalid - needs regeneration")
+            record_operation(
+                "email",
+                "failed",
+                latency_ms=int((datetime.now() - started).total_seconds() * 1000),
+                resource_id=resource_id,
+                email_status="token_expired",
+                route="/notifications",
+                http_method="EMAIL",
+                error_details="OAuth token expired/invalid. Regenerate token: python -m app.gmail_auth",
+            )
+        elif "quota" in error_msg or "rate limit" in error_msg:
+            logger.error("Gmail API quota exceeded or rate limited")
+            record_operation(
+                "email",
+                "failed",
+                latency_ms=int((datetime.now() - started).total_seconds() * 1000),
+                resource_id=resource_id,
+                email_status="quota_exceeded",
+                route="/notifications",
+                http_method="EMAIL",
+                error_details=error_details,
+            )
+        else:
+            logger.exception("Gmail %s notification could not be sent due to network/API error", event)
+            record_operation(
+                "email",
+                "failed",
+                latency_ms=int((datetime.now() - started).total_seconds() * 1000),
+                resource_id=resource_id,
+                email_status="api_error",
+                route="/notifications",
+                http_method="EMAIL",
+                error_details=error_details,
+            )
 
 
 def _dashboard_link(**query: str) -> str:

@@ -65,20 +65,39 @@ class PatientStatusUpdated(BaseModel):
 
 
 class AppointmentIn(BaseModel):
-    patient_name: Short = "Patient"
-    patient_phone: Short = ""
+    patient_name: Short = Field(..., description="Patient name is required")
+    patient_phone: Short = Field(..., min_length=10, description="Patient phone is required (min 10 digits)")
     specialist: Short = "Anarva Clinic Team"
-    date: dt.date = Field(default_factory=dt.date.today)
-    time_slot: Short = "10:30 AM - Morning"
+    date: str = Field(default_factory=lambda: dt.date.today().isoformat())
+    time_slot: Short = Field(..., description="Time slot is required")
     type: Short = "In-Clinic Visit (Indiranagar Center)"
     notes: Long = ""
 
+    @field_validator("patient_name", "time_slot")
+    @classmethod
+    def _validate_non_empty(cls, value):
+        if not value or not value.strip():
+            raise ValueError("This field cannot be empty")
+        return value.strip()
+
     @field_validator("date")
     @classmethod
-    def _not_in_the_past(cls, value):
-        if value < dt.date.today():
+    def _validate_date(cls, value):
+        # Accept both date objects and ISO format strings
+        if isinstance(value, dt.date):
+            date_value = value
+        else:
+            try:
+                date_value = dt.date.fromisoformat(value)
+            except (ValueError, AttributeError, TypeError) as e:
+                raise ValueError(f"Invalid date format. Expected YYYY-MM-DD format. Error: {str(e)}")
+        
+        # Check if date is in the past
+        if date_value < dt.date.today():
             raise ValueError("appointment date cannot be in the past")
-        return value
+        
+        # Return as ISO string for consistency
+        return date_value.isoformat()
 
 
 class AppointmentRecord(BaseModel):

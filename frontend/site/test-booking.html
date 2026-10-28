@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking Test - Anarva Clinic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .test-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .test-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .test-btn:hover {
+            background: #e0e0e0;
+        }
+        .device-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .device-info strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Appointment Booking Test</h1>
+        <p class="subtitle">Test the booking system on different devices</p>
+        
+        <div class="device-info">
+            <strong>Device Info:</strong><br>
+            User Agent: <span id="userAgent"></span><br>
+            Screen: <span id="screenSize"></span><br>
+            Viewport: <span id="viewportSize"></span>
+        </div>
+
+        <div class="test-buttons">
+            <button type="button" class="test-btn" onclick="fillValidData()">✅ Fill Valid Data</button>
+            <button type="button" class="test-btn" onclick="fillPastDate()">❌ Past Date</button>
+            <button type="button" class="test-btn" onclick="fillInvalidEmail()">❌ Invalid Email</button>
+            <button type="button" class="test-btn" onclick="fillInvalidPhone()">❌ Invalid Phone</button>
+            <button type="button" class="test-btn" onclick="fillEmptyFields()">❌ Empty Fields</button>
+            <button type="button" class="test-btn" onclick="fillSpecialChars()">✅ Special Chars</button>
+        </div>
+
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="patientName">Full Name *</label>
+                <input type="text" id="patientName" required placeholder="Enter patient full name">
+            </div>
+            
+            <div class="form-group">
+                <label for="patientEmail">Email Address *</label>
+                <input type="email" id="patientEmail" required placeholder="Enter email address">
+            </div>
+            
+            <div class="form-group">
+                <label for="patientPhone">Phone Number *</label>
+                <input type="tel" id="patientPhone" required placeholder="Enter mobile number">
+            </div>
+            
+            <div class="form-group">
+                <label for="appointmentDate">Preferred Date *</label>
+                <input type="date" id="appointmentDate" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="consultationType">Consultation Type *</label>
+                <select id="consultationType" required>
+                    <option value="In-Clinic Visit">In-Clinic Visit</option>
+                    <option value="Online Video Consult">Online Video Consult</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="appointmentTime">Preferred Time Slot *</label>
+                <select id="appointmentTime" required>
+                    <option value="">Select Time Slot</option>
+                    <option value="10:00 AM">10:00 AM - 10:30 AM</option>
+                    <option value="11:00 AM">11:00 AM - 11:30 AM</option>
+                    <option value="12:00 PM">12:00 PM - 12:30 PM</option>
+                    <option value="01:00 PM">01:00 PM - 01:30 PM</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="patientConcern">Skin or Hair Concern</label>
+                <textarea id="patientConcern" rows="3" placeholder="Leave us a message..."></textarea>
+            </div>
+            
+            <button type="submit" id="submitBtn">Book Appointment</button>
+        </form>
+        
+        <div id="formStatus" class="status"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://anarva-clinic.onrender.com';
+        
+        // Display device info
+        document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 100) + '...';
+        document.getElementById('screenSize').textContent = `${screen.width}x${screen.height}`;
+        document.getElementById('viewportSize').textContent = `${window.innerWidth}x${window.innerHeight}`;
+        
+        // Set default date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('appointmentDate').value = tomorrow.toISOString().split('T')[0];
+        
+        // Test data functions
+        function fillValidData() {
+            document.getElementById('patientName').value = 'Test Patient';
+            document.getElementById('patientEmail').value = 'test@example.com';
+            document.getElementById('patientPhone').value = '+919876543210';
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('appointmentDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('appointmentTime').value = '10:00 AM';
+            document.getElementById('patientConcern').value = 'Test concern';
+        }
+        
+        function fillPastDate() {
+            fillValidData();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            document.getElementById('appointmentDate').value = yesterday.toISOString().split('T')[0];
+        }
+        
+        function fillInvalidEmail() {
+            fillValidData();
+            document.getElementById('patientEmail').value = 'invalid-email';
+        }
+        
+        function fillInvalidPhone() {
+            fillValidData();
+            document.getElementById('patientPhone').value = '123';
+        }
+        
+        function fillEmptyFields() {
+            document.getElementById('patientName').value = '';
+            document.getElementById('patientEmail').value = '';
+            document.getElementById('patientPhone').value = '';
+            document.getElementById('appointmentDate').value = '';
+            document.getElementById('appointmentTime').value = '';
+        }
+        
+        function fillSpecialChars() {
+            document.getElementById('patientName').value = 'José María García-López';
+            document.getElementById('patientEmail').value = 'test@example.com';
+            document.getElementById('patientPhone').value = '+919876543210';
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('appointmentDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('appointmentTime').value = '10:00 AM';
+            document.getElementById('patientConcern').value = 'Test with special chars: é ñ ü ö';
+        }
+        
+        // Form submission
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const formStatus = document.getElementById('formStatus');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            const formData = {
+                patient_name: document.getElementById('patientName').value.trim(),
+                patient_phone: document.getElementById('patientPhone').value.trim(),
+                specialist: 'Dr. Ajith Kumar',
+                date: document.getElementById('appointmentDate').value,
+                time_slot: document.getElementById('appointmentTime').value,
+                type: document.getElementById('consultationType').value,
+                notes: `Email: ${document.getElementById('patientEmail').value}\nConcern: ${document.getElementById('patientConcern').value}`
+            };
+            
+            submitBtn.innerHTML = '⏳ Saving...';
+            submitBtn.disabled = true;
+            formStatus.style.display = 'block';
+            formStatus.className = 'status info';
+            formStatus.innerHTML = 'Submitting appointment...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/appointments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    formStatus.className = 'status success';
+                    formStatus.innerHTML = `✅ Success! Appointment ID: ${result.appointment.appointment_id}<br>Time: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    formStatus.className = 'status error';
+                    formStatus.innerHTML = `❌ Error ${response.status}: ${result.error || result.detail || 'Unknown error'}`;
+                }
+            } catch (err) {
+                formStatus.className = 'status error';
+                formStatus.innerHTML = `❌ Network Error: ${err.message}`;
+            } finally {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

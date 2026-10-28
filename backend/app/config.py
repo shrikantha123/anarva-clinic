@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     gmail_token_json: str | None = None
     gmail_token_file: Path = ROOT / "secrets" / "gmail-token.json"
     gmail_oauth_port: int = Field(8765, ge=1024, le=65535)
+    # Brevo email service configuration
+    brevo_api_key: str | None = None
+    brevo_sender_name: str = "Anarva Clinic"
     # Signs doctor session cookies. Set it explicitly when running several instances.
     secret_key: SecretStr = Field(default_factory=lambda: SecretStr(secrets.token_urlsafe(32)))
 

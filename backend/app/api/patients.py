@@ -1,8 +1,9 @@
 from fastapi import APIRouter, BackgroundTasks
 
+from app.config import get_settings
 from app.deps import DB
 from app.schemas.records import PatientIn, PatientSaved
-from app.services import email_notifications, records
+from app.services import brevo_email, email_notifications, records
 
 router = APIRouter(tags=["patients"])
 
@@ -29,5 +30,10 @@ def create_patient(body: PatientIn, background_tasks: BackgroundTasks, db: DB):
             db_status="success",
             email_status="queued",
         )
-        background_tasks.add_task(email_notifications.notify_report_saved, record)
+        # Use Brevo if configured, otherwise fall back to Gmail
+        settings = get_settings()
+        if settings.brevo_api_key:
+            background_tasks.add_task(brevo_email.notify_report_saved_brevo, record)
+        else:
+            background_tasks.add_task(email_notifications.notify_report_saved, record)
     return {"patient_id": record["patient_id"], "record": record}

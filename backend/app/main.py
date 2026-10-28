@@ -218,14 +218,10 @@ def create_app() -> FastAPI:
     # CORS Middleware Configuration for Render
     # Allow requests from your deployed frontend Render URL
     # For local development, you can add "http://localhost:5173" to allowed_origins
-  # CORS Middleware Configuration for Render & Custom Domains
+    # CORS Middleware Configuration - Accept requests from all domains
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://anarvaclinic.com",
-            "https://www.anarvaclinic.com",
-            "http://localhost:5173",
-        ],
+        allow_origins=["*"],  # Allow all origins for maximum compatibility
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

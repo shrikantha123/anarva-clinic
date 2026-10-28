@@ -289,19 +289,66 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitBtn = document.getElementById('submitBtn');
             const originalBtnText = submitBtn.innerHTML;
 
+            // Validate all required fields
+            const patientName = document.getElementById('patientName').value.trim();
+            const patientEmail = document.getElementById('patientEmail').value.trim();
+            const patientPhone = document.getElementById('patientPhone').value.trim();
+            const consultationType = document.getElementById('consultationType').value;
+            const preferredDate = document.getElementById('appointmentDate').value;
+            const preferredTime = document.getElementById('appointmentTime').value;
+            const patientConcern = document.getElementById('patientConcern').value.trim();
+
+            // Client-side validation
+            if (!patientName) {
+                formStatus.className = 'form-status-msg error';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please enter your full name.';
+                return;
+            }
+            if (!patientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientEmail)) {
+                formStatus.className = 'form-status-msg error';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please enter a valid email address.';
+                return;
+            }
+            if (!patientPhone || !/^\+?[0-9]{10,15}$/.test(patientPhone.replace(/[\s-]/g, ''))) {
+                formStatus.className = 'form-status-msg error';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please enter a valid phone number (10-15 digits).';
+                return;
+            }
+            if (!preferredDate) {
+                formStatus.className = 'form-status-msg error';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please select a preferred date.';
+                return;
+            }
+            // Validate date is not in the past
+            const selectedDate = new Date(preferredDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selectedDate < today) {
+                formStatus.className = 'form-status-msg error';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Appointment date cannot be in the past.';
+                return;
+            }
+            if (!preferredTime) {
+                formStatus.className = 'form-status-msg error';
+                formStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please select a preferred time slot.';
+                return;
+            }
+
             // Store previous form data for undo
             previousFormData = {
-                fullName: document.getElementById('patientName').value,
-                email: document.getElementById('patientEmail').value,
-                phone: document.getElementById('patientPhone').value,
-                consultationType: document.getElementById('consultationType').value,
-                preferredDate: document.getElementById('appointmentDate').value,
-                preferredTime: document.getElementById('appointmentTime').value,
-                concern: document.getElementById('patientConcern').value
+                fullName: patientName,
+                email: patientEmail,
+                phone: patientPhone,
+                consultationType: consultationType,
+                preferredDate: preferredDate,
+                preferredTime: preferredTime,
+                concern: patientConcern
             };
 
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Appointment...';
             submitBtn.disabled = true;
+            formStatus.className = 'form-status-msg info';
+            formStatus.innerHTML = '<i class="fa-solid fa-info-circle"></i> Submitting your appointment request...';
 
             const formData = { ...previousFormData };
 
@@ -323,8 +370,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) {
                     const errText = await response.text();
                     console.error('Server said:', response.status, errText);
-                    throw new Error(`Status ${response.status}: ${errText}`);
+                    
+                    // Parse error if possible
+                    let errorMessage = `Status ${response.status}`;
+                    try {
+                        const errJson = JSON.parse(errText);
+                        if (errJson.error) errorMessage = errJson.error;
+                        if (errJson.detail) errorMessage = errJson.detail;
+                        if (errJson.fields && errJson.fields.includes('date')) {
+                            errorMessage = 'Invalid date format. Please select a valid date.';
+                        }
+                    } catch {
+                        // If not JSON, use the text
+                        if (errText && errText.length < 200) errorMessage = errText;
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
+
+                const result = await response.json();
+                console.log('Appointment saved:', result);
 
                 // Online consultation: send details to the clinic on WhatsApp
                 if (formData.consultationType === 'Online Video Consult') {
@@ -342,13 +407,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 formStatus.className = 'form-status-msg success';
-                formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Appointment request saved. The clinic team will confirm your slot.';
+                formStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Appointment request saved successfully! The clinic team will confirm your slot shortly.';
                 bookingForm.reset();
                 if (timeSelect) timeSelect.innerHTML = clinicSlots;
+                previousFormData = null; // Clear undo data on success
             } catch (err) {
                 console.error('Submission Error:', err);
                 formStatus.className = 'form-status-msg error';
-                formStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Could not save the appointment (${err.message}). Please try again or call the clinic.`;
+                formStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Could not save the appointment (${err.message}). Please try again or call the clinic at +91 9902430424.`;
             } finally {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
