@@ -94,8 +94,15 @@ def check_email_config():
     settings = get_settings()
     env_token = getattr(settings, "gmail_token_json", None) or os.getenv("GMAIL_TOKEN_JSON")
     file_exists = settings.gmail_token_file.is_file()
+    brevo_key = settings.brevo_api_key
+
+    # Determine which email service will be used
+    email_service = "Brevo" if brevo_key else "Gmail OAuth"
 
     return {
+        "email_service": email_service,
+        "brevo_api_key": "CONFIGURED" if brevo_key else "NOT CONFIGURED",
+        "brevo_api_key_preview": str(brevo_key)[:20] + "..." if brevo_key else None,
         "gmail_token_json_env": "FOUND" if env_token else "NOT FOUND",
         "gmail_token_file": str(settings.gmail_token_file),
         "gmail_token_file_exists": file_exists,
